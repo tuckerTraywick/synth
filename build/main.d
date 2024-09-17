@@ -47,7 +47,7 @@ build/main.o: source/main.c /opt/homebrew/include/SDL2/SDL.h \
   /opt/homebrew/include/SDL2/SDL_timer.h \
   /opt/homebrew/include/SDL2/SDL_version.h \
   /opt/homebrew/include/SDL2/SDL_locale.h \
-  /opt/homebrew/include/SDL2/SDL_misc.h
+  /opt/homebrew/include/SDL2/SDL_misc.h include/synth.h
 
 /opt/homebrew/include/SDL2/SDL.h:
 
@@ -148,3 +148,5 @@ build/main.o: source/main.c /opt/homebrew/include/SDL2/SDL.h \
 /opt/homebrew/include/SDL2/SDL_locale.h:
 
 /opt/homebrew/include/SDL2/SDL_misc.h:
+
+include/synth.h:
