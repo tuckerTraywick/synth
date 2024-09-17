@@ -2,23 +2,25 @@
 #include <stdio.h>
 #include "SDL.h"
 
-typedef struct SineWave {
-    float phase;
-} SineWave;
+typedef struct Oscillator {
+	double t;
+} Oscillator;
 
 static const int sampleRate = 44100;
 
 // Generates a sine wave and writes it to an audio stream.
 static void sineCallback(void *userData, Uint8 *stream, int length) {
 	Sint16 *output = (Sint16*)stream;
-    SineWave *wave = (SineWave*)userData;
-	int amplitude = 28000;
-	int frequency = 440;
-	for (int i = 0; i < length/2; ++i) {
-		output[i] = (Sint16)(amplitude*sinf(2.0f*M_PI*wave->phase));
-		wave->phase += (float)frequency/sampleRate;
-		if (wave->phase >= 1.0f) {
-			wave->phase -= 1.0f;
+	Oscillator *oscillator = (Oscillator*)userData;
+	double frequency = 440.0;
+	double amplitude = 1000;
+	double step = 2*M_PI*frequency/sampleRate;
+	// Compute the wave.
+	for (int i = 0; i < length/sizeof (Sint16); ++i) {
+		output[i] = amplitude*sinf(oscillator->t);
+		oscillator->t += step;
+		if (oscillator->t >= 2*M_PI) {
+			oscillator->t -= 2*M_PI; // `-= 2pi` instead of `= 0` to preserve how far t is over 2*pi.
 		}
 	}
 }
@@ -31,14 +33,14 @@ int main(void) {
 	}
 	
 	// Open an audio device.
-    SineWave wave = {.phase = 0.0f};
+    Oscillator oscillator = {.t=0.0};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
-		.format = AUDIO_S16SYS,
+		.format = AUDIO_S16,
 		.channels = 1,
-		.samples = 1024,
+		.samples = 2048,
 		.callback = &sineCallback,
-        .userdata = &wave,
+        .userdata = &oscillator,
 	};
 	SDL_AudioDeviceID playbackDevice = SDL_OpenAudioDevice(NULL, 0, &audioSpec, &audioSpec, 0);
 	if (playbackDevice == 0) {
