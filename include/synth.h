@@ -19,6 +19,8 @@ size_t generateSquareSample(float frequency, float amplitude, float offset, uint
 
 size_t generateTriangleSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples);
 
+size_t generateSawtoothSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples);
+
 void applyLowPassFilter(float cutoffFrequency, uint32_t sampleRate, float *samples, size_t length);
 
 #endif // SYNTH_H
