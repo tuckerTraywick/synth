@@ -15,7 +15,7 @@ int main(void) {
 	}
 	
 	// Generate a sine wave sample.
-	size_t sampleCapacity = 1024;
+	size_t sampleCapacity = 2048;
 	float *samples = malloc(sampleCapacity*sizeof (float));
 	size_t sampleLength = generateSineSample(440, 5000, 0, sampleRate, samples);
 

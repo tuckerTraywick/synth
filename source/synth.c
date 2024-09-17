@@ -3,6 +3,7 @@
 #include <math.h>
 #include "synth.h"
 
+// Returns the alpha parameter to tune a lowpass filter to the given cutoff frequency.
 static float getAlpha(float cutoffFrequency, float sampleRate) {
 	// Simplified Butterworth approximation.
     float omega = 2.0f*M_PI*cutoffFrequency/sampleRate;
