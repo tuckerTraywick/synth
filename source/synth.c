@@ -5,67 +5,73 @@
 
 // Returns the alpha parameter to tune a lowpass filter to the given cutoff frequency.
 static float getAlpha(float cutoffFrequency, float sampleRate) {
-	// Simplified Butterworth approximation.
     float omega = 2.0f*M_PI*cutoffFrequency/sampleRate;
-    return omega/(omega + 1.0f);
+    return omega/(omega + 1.0f); // Simplified Butterworth approximation.
 }
 
-void loopSample(void *userData, uint8_t* stream, int length) {
-	Sample *sample = (Sample*)userData;
-	uint16_t *output = (uint16_t*)stream;
-	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
-		output[i] = sample->samples[sample->position];
-		sample->position = (sample->position + 1)%sample->length;
+float stepOscillator(Oscillator *oscillator, float sampleRate) {
+	float frequency = oscillator->frequency;
+	float amplitude = oscillator->amplitude;
+	float phase = oscillator->phase;
+	float offset = oscillator->offset;
+	float t = oscillator->t;
+	float period = sampleRate/frequency;
+	float range = 0.0f;
+	float sample = 0.0f;
+
+	// Generate the sample.
+	switch (oscillator->type) {
+		case SINE:
+			range = 2.0f*M_PI;
+			sample = amplitude*sinf(t + phase) + offset;
+			break;
+		case TRIANGLE:
+			range = 1.0f;
+			sample = (t < 0.5) ? amplitude*t + offset : amplitude*(1.0f - t) + offset;
+			break;
+		case SAWTOOTH:
+			range = 1.0f;
+			sample = amplitude*t + offset;
+			break;
+		case SQUARE:
+			range = 1.0f;
+			sample = (t < 0.5) ? offset : amplitude + offset;
+			break;
 	}
+
+	// Update t.
+	float step = range/period;
+	oscillator->t += step;
+	if (oscillator->t >= range) {
+		oscillator->t = (oscillator->type == SINE) ? oscillator->t - range : 0.0f;
+	}
+
+	// Deliver the output.
+	if (oscillator->output)
+		*oscillator->output = sample;
+	return sample;
 }
 
-size_t generateSineSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples) {
-	float period = sampleRate/frequency; // In samples.
-	float step = 2.0f*M_PI/period; // [0, 2pi] is the domain.
-	float t = 0.0f;
-	for (size_t i = 0; i < period; ++i) {
-		samples[i] = amplitude*sinf(t + offset);
-		t += step;
-	}
-	return period;
+float stepFilter(Filter *filter, float sampleRate) {
+	float alpha = filter->leftCutoff;//getAlpha(filter->leftCutoff, sampleRate);
+	float output = alpha*filter->currentSample + (1.0f - alpha)*filter->previousSample;
+	filter->previousSample = output;
+	if (filter->output)
+		*filter->output = output;
+	return output;
 }
 
-size_t generateSquareSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples) {
-	float period = sampleRate/frequency; // In samples.
-	float step = 1/period; // [0, 1] is the domain.
-	float t = 0.0f;
-	for (size_t i = 0; i < period; ++i) {
-		samples[i] = (t < 0.5) ? 0 : amplitude;
-		t += step;
+float stepSynth(Synth *synth, float sampleRate) {
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		stepOscillator(synth->oscillators + i, sampleRate);
 	}
-	return period;
-}
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		stepFilter(synth->filters + i, sampleRate);
+	}
 
-size_t generateTriangleSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples) {
-	float period = sampleRate/frequency; // In samples.
-	float step = 1/period; // [0, 1] is the domain.
-	float t = 0.0f;
-	for (size_t i = 0; i < period; ++i) {
-		samples[i] = (t < 0.5) ? t*amplitude : (1 - t)*amplitude;
-		t += step;
+	float output = 0.0f;
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		output += synth->outputs[i];
 	}
-	return period;
-}
-
-size_t generateSawtoothSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples) {
-	float period = sampleRate/frequency; // In samples.
-	float step = 1/period; // [0, 1] is the domain.
-	float t = 0.0f;
-	for (size_t i = 0; i < period; ++i) {
-		samples[i] = amplitude*t;
-		t += step;
-	}
-	return period;
-}
-
-void applyLowPassFilter(float cutoffFrequency, uint32_t sampleRate, float *samples, size_t length) {
-	float alpha = getAlpha(cutoffFrequency, sampleRate);
-	for (size_t i = 1; i < length; ++i) {
-		samples[i] = alpha*samples[i] + (1.0f - alpha)*samples[i - 1];
-	}
+	return output;
 }

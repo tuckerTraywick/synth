@@ -4,29 +4,72 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// The data passed to the `loopSample()` function to keep track of where in the sample it is.
-typedef struct Sample {
-	float *samples;
-	size_t length;
-	size_t position;
-} Sample;
+#define SYNTH_SIZE 4
 
-// Callback function for SDL.
-void loopSample(void *sample, uint8_t* stream, int length);
+// A typical ADSR envelope.
+typedef struct Envelope {
+	float attack;
+	float decay;
+	float sustain;
+	float release;
+	float t;
+	float *output;
+} Envelope;
 
-// Generates a single sine wave oscillation.
-size_t generateSineSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples);
+// The type of wave an oscillator produces.
+typedef enum WaveType {
+	SINE,
+	TRIANGLE,
+	SAWTOOTH,
+	SQUARE,
+	WHITE_NOISE,
+} WaveType;
 
-// Generates a single square wave oscillation.
-size_t generateSquareSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples);
+// Produces a wave each time it is stepped.
+typedef struct Oscillator {
+	WaveType type;
+	float frequency;
+	float amplitude;
+	float phase;
+	float offset;
+	float t;
+	float *output;
+} Oscillator;
 
-// Generates a single triangle wave oscillation.
-size_t generateTriangleSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples);
+// The type of filtering a filter does.
+typedef enum FilterType {
+	LOW_PASS,
+	HIGH_PASS,
+	BAND_PASS,
+} FilterType;
 
-// Generates a single sawtooth wave oscillation.
-size_t generateSawtoothSample(float frequency, float amplitude, float offset, uint32_t sampleRate, float *samples);
+// A filter that alters a signal.
+typedef struct Filter {
+	float leftCutoff;
+	float rightCutoff;
+	float previousSample;
+	float currentSample;
+	float *output;
+} Filter;
 
-// Applies a lowpass filter to a sample.
-void applyLowPassFilter(float cutoffFrequency, uint32_t sampleRate, float *samples, size_t length);
+// A collection of modules that can be connected to eachother to make sounds.
+typedef struct Synth {
+	Envelope envelopes[SYNTH_SIZE];
+	Oscillator oscillators[SYNTH_SIZE];
+	Filter filters[SYNTH_SIZE];
+	float outputs[SYNTH_SIZE];
+} Synth;
+
+// Steps an evnelope forward one tick. Returns the sample it generates.
+float stepEnvelope(Envelope *envelope, float sampleRate);
+
+// Steps an oscillator forward one tick. Returns the sample it generates.
+float stepOscillator(Oscillator *oscillator, float sampleRate);
+
+// Steps a filter forward one tick. Returns the sample it generates.
+float stepFilter(Filter *filter, float sampleRate);
+
+// Steps a synth forward one tick. Returns the sum of its outputs.
+float stepSynth(Synth *synth, float sampleRate);
 
 #endif // SYNTH_H

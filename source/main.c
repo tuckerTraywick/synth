@@ -3,9 +3,15 @@
 #include "SDL.h"
 #include "synth.h"
 
-#define arrayLength(array) (sizeof(array)/sizeof((array)[0]))
-
 static const int sampleRate = 44100;
+
+static void playSound(void *userData, uint8_t *stream, int length) {
+	Synth *synth = (Synth*)userData;
+	uint16_t *output = (uint16_t*)stream;
+	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
+		output[i] = stepSynth(synth, (float)sampleRate);
+	}
+}
 
 int main(void) {
 	// Initialize SDL.
@@ -13,24 +19,19 @@ int main(void) {
 		printf("Error initializing SDL.\n");
 		return 1;
 	}
-	
-	// Generate a sine wave sample.
-	size_t sampleCapacity = 2048;
-	float *samples = malloc(sampleCapacity*sizeof (float));
-	size_t sampleLength = generateSineSample(440, 5000, 0, sampleRate, samples);
 
 	// Open an audio device.
-    Sample sample = {
-		.length = sampleLength,
-		.samples = samples,
+    Synth synth = {
+		.oscillators[0] = {.type = SINE, .frequency = 440, .amplitude = 5000, .output = &synth.outputs[0]},
+		.oscillators[1] = {.type = SINE, .frequency = 10, .amplitude = 10, .offset = 440, .output = &synth.oscillators[0].frequency},
 	};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
 		.format = AUDIO_S16,
 		.channels = 1,
 		.samples = 2048,
-		.callback = &loopSample,
-        .userdata = &sample,
+		.callback = &playSound,
+        .userdata = &synth,
 	};
 	SDL_AudioDeviceID playbackDevice = SDL_OpenAudioDevice(NULL, 0, &audioSpec, &audioSpec, 0);
 	if (playbackDevice == 0) {
@@ -45,7 +46,6 @@ int main(void) {
 	getchar();
 	
 	// Cleanup.
-	free(samples);
 	SDL_CloseAudioDevice(playbackDevice);
 	SDL_Quit();
 	return 0;
