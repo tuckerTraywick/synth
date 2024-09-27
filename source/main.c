@@ -22,8 +22,9 @@ int main(void) {
 
 	// Open an audio device.
     Synth synth = {
-		.oscillators[0] = {.type = SINE, .frequency = 440, .amplitude = 5000, .output = &synth.outputs[0]},
-		.oscillators[1] = {.type = SINE, .frequency = 10, .amplitude = 10, .offset = 440, .output = &synth.oscillators[0].frequency},
+		.oscillators[0] = {.type = SINE, .frequency = 440, .amplitude = 5000, .outputA = &synth.outputs[0]},
+		.oscillators[1] = {.type = SINE, .frequency = 440, .amplitude = 1, .offset = 0, .phase = 0, .outputA = &synth.oscillators[0].phase},
+		// .oscillators[2] = {.type = SINE, .frequency = 440*8, .amplitude = 1, .offset = 0, .phase = 1, .outputA = &synth.oscillators[1].phase},
 	};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,

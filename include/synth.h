@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define SYNTH_SIZE 4
+#define SYNTH_SIZE 8
 
 // A typical ADSR envelope.
 typedef struct Envelope {
@@ -22,7 +22,7 @@ typedef enum WaveType {
 	TRIANGLE,
 	SAWTOOTH,
 	SQUARE,
-	WHITE_NOISE,
+	// WHITE_NOISE,
 } WaveType;
 
 // Produces a wave each time it is stepped.
@@ -33,14 +33,15 @@ typedef struct Oscillator {
 	float phase;
 	float offset;
 	float t;
-	float *output;
+	float *outputA;
+	float *outputB;
 } Oscillator;
 
 // The type of filtering a filter does.
 typedef enum FilterType {
 	LOW_PASS,
-	HIGH_PASS,
-	BAND_PASS,
+	// HIGH_PASS,
+	// BAND_PASS,
 } FilterType;
 
 // A filter that alters a signal.

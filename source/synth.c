@@ -47,13 +47,15 @@ float stepOscillator(Oscillator *oscillator, float sampleRate) {
 	}
 
 	// Deliver the output.
-	if (oscillator->output)
-		*oscillator->output = sample;
+	if (oscillator->outputA)
+		*oscillator->outputA = sample;
+	if (oscillator->outputB)
+		*oscillator->outputB = sample;
 	return sample;
 }
 
 float stepFilter(Filter *filter, float sampleRate) {
-	float alpha = filter->leftCutoff;//getAlpha(filter->leftCutoff, sampleRate);
+	float alpha = getAlpha(filter->leftCutoff, sampleRate);
 	float output = alpha*filter->currentSample + (1.0f - alpha)*filter->previousSample;
 	filter->previousSample = output;
 	if (filter->output)
