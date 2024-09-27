@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "SDL.h"
 #include "synth.h"
+#include "gui.h"
 
 static const int sampleRate = 44100;
 
@@ -13,18 +14,31 @@ static void playSound(void *userData, uint8_t *stream, int length) {
 	}
 }
 
+static void drawOscillator(gui_Window *window, unsigned int x, unsigned int y, float *frequency, float *amplitude) {
+			gui_setAlignment(window, gui_MIDDLE_LEFT);
+			gui_drawText(window, "VCO", x, y);
+			gui_drawHorizontalSlider(window, frequency, true, x, y+2, 100, 15);
+			gui_drawText(window, "frequency", x+7, y+2);
+			gui_drawHorizontalSlider(window, amplitude, true, x, y+4, 100, 15);
+			gui_drawText(window, "amplitude", x+7, y+4);
+}
+
 int main(void) {
-	// Initialize SDL.
+	// Initialization.
+	if (gui_setup()) {
+		printf("Error setting up GUI library.\n");
+		return 1;
+	}
+
 	if (SDL_Init(SDL_INIT_AUDIO) < 0) {
 		printf("Error initializing SDL.\n");
 		return 1;
 	}
-
+	
 	// Open an audio device.
     Synth synth = {
-		.oscillators[0] = {.type = SINE, .frequency = 440, .amplitude = 5000, .outputA = &synth.outputs[0]},
-		.oscillators[1] = {.type = SINE, .frequency = 440, .amplitude = 1, .offset = 0, .phase = 0, .outputA = &synth.oscillators[0].phase},
-		// .oscillators[2] = {.type = SINE, .frequency = 440*8, .amplitude = 1, .offset = 0, .phase = 1, .outputA = &synth.oscillators[1].phase},
+		.oscillators[0] = {.type = SINE, .outputA = &synth.outputs[0]},
+		.oscillators[1] = {.type = SINE, .outputA = &synth.oscillators[0].phase},
 	};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
@@ -43,11 +57,52 @@ int main(void) {
 
 	// Begin playback and wait until the user quits.
 	SDL_PauseAudioDevice(playbackDevice, 0);
-	printf("Press enter to quit.\n");
-	getchar();
+
+	// Create a window.
+	gui_Window window = {0};
+	if (gui_intializeWindow(&window, "Synth", 600, 600)) {
+		printf("Error initializing window.\n");
+		SDL_CloseAudioDevice(playbackDevice);
+		gui_teardown();
+		return 1;
+	}
+
+	// Run the gui.
+	gui_setBackgroundColor(&window, 0, 0, 0, 255);
+	gui_setDrawColor(&window, 255, 255, 255, 255);
+	gui_setFillColor(&window, 64, 64, 64, 255);
+	gui_setAccentColor(&window, 255, 0, 0, 255);
+	gui_setGridSize(&window, 40, 40);
+	float frequencies[SYNTH_SIZE] = {[0 ... 5] = 0.5};
+	float amplitudes[SYNTH_SIZE] = {[0 ... 5] = 0.5};
+	while (gui_windowIsOpen(&window)) {
+		gui_beginDrawing(&window);
+			// Draw vertical and horizontal rulers.
+			#if 0
+				gui_setAlignment(&window, gui_CENTER);
+				for (unsigned int i = 0; i < window.gridWidth; ++i)
+					gui_drawRectangle(&window, i, 0, 10, 10);
+				for (unsigned int i = 0; i < window.gridHeight; ++i)
+					gui_drawRectangle(&window, 0, i, 10, 10);
+			#endif
+
+			drawOscillator(&window, 1, 1, frequencies, amplitudes);
+			drawOscillator(&window, 1, 10, frequencies + 1, amplitudes + 1);
+		gui_endDrawing(&window);
+
+		for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+			synth.oscillators[i].frequency = 880*frequencies[i];
+			synth.oscillators[i].amplitude = 5000*amplitudes[i];
+		}
+		synth.oscillators[1].amplitude = amplitudes[1];
+	}
+	
+	// printf("Press enter to quit.\n");
+	// getchar();
 	
 	// Cleanup.
 	SDL_CloseAudioDevice(playbackDevice);
-	SDL_Quit();
+	gui_teardown();
+	// SDL_Quit();
 	return 0;
 }
