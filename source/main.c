@@ -10,17 +10,8 @@ static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
 	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
-		output[i] = stepSynth(synth, (float)sampleRate);
+		output[i] = stepSynth(synth);
 	}
-}
-
-static void drawOscillator(gui_Window *window, unsigned int x, unsigned int y, float *frequency, float *amplitude) {
-			gui_setAlignment(window, gui_MIDDLE_LEFT);
-			gui_drawText(window, "Oscillator", x, y);
-			gui_drawHorizontalSlider(window, frequency, true, x, y+2, 100, 15);
-			gui_drawText(window, "frequency", x+7, y+2);
-			gui_drawHorizontalSlider(window, amplitude, true, x, y+4, 100, 15);
-			gui_drawText(window, "amplitude", x+7, y+4);
 }
 
 int main(void) {
@@ -36,9 +27,16 @@ int main(void) {
 	}
 	
 	// Open an audio device.
-    Synth synth = {
-		.oscillators[0] = {.type = SINE, .outputA = &synth.outputs[0]},
-		.oscillators[1] = {.type = SINE, .outputA = &synth.oscillators[0].phase},
+	Synth synth = {
+		.operators = {
+			{.frequency = 440, .level = 1000},
+			{.frequency = 440*4, .level = 1},
+			{.frequency = 880, .level = 3},
+		},
+		.patches = {
+			{.operators = {2, 1, 0, SYNTH_SIZE+1}, .operatorCount = 4}
+		},
+		.patchCount = 1,
 	};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
@@ -73,9 +71,6 @@ int main(void) {
 	gui_setFillColor(&window, 64, 64, 64, 255);
 	gui_setAccentColor(&window, 255, 0, 0, 255);
 	gui_setGridSize(&window, 40, 40);
-	float frequencies[SYNTH_SIZE] = {[0 ... 5] = 0.5};
-	float amplitudes[SYNTH_SIZE] = {[0 ... 5] = 0.5};
-	float unison = 0.5;
 	while (gui_windowIsOpen(&window)) {
 		gui_beginDrawing(&window);
 			// Draw vertical and horizontal rulers.
@@ -86,24 +81,8 @@ int main(void) {
 				for (unsigned int i = 0; i < window.gridHeight; ++i)
 					gui_drawRectangle(&window, 0, i, 10, 10);
 			#endif
-
-			drawOscillator(&window, 1, 1, frequencies, amplitudes);
-			drawOscillator(&window, 1, 10, frequencies + 1, amplitudes + 1);
-
-			gui_setAlignment(&window, gui_MIDDLE_LEFT);
-			gui_drawHorizontalSlider(&window, &unison, true, 1, 20, 100, 15);
-			gui_drawText(&window, "unison", 8, 20);
 		gui_endDrawing(&window);
-
-		synth.oscillators[0].frequency = 440*unison + (440 - 440*frequencies[0]);
-		synth.oscillators[0].amplitude = 5000*amplitudes[0];
-
-		synth.oscillators[1].frequency = frequencies[1]*8*440*unison;
-		synth.oscillators[1].amplitude = 2*amplitudes[1];
 	}
-	
-	// printf("Press enter to quit.\n");
-	// getchar();
 	
 	// Cleanup.
 	SDL_CloseAudioDevice(playbackDevice);

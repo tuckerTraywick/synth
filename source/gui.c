@@ -342,7 +342,6 @@ bool gui_drawCheckbox(gui_Window *window, bool *value, unsigned int width, unsig
 	uint32_t leftDown = SDL_GetMouseState(&mouseX, &mouseY) & SDL_BUTTON(SDL_BUTTON_LEFT);
 	bool hovering = inRectangle(mouseX, mouseY, pixelX, pixelY, width, width);
 	bool clicked = false;
-	SDL_Rect boundingBox = {pixelX, pixelY, pixelX + width, pixelY + width};
 
 	if (rectanglesEqual(&window->mouseSelection, &nothingSelected) && hovering && leftDown) {
 		*value = !*value;
