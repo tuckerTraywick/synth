@@ -16,7 +16,7 @@ static void playSound(void *userData, uint8_t *stream, int length) {
 
 static void drawOscillator(gui_Window *window, unsigned int x, unsigned int y, float *frequency, float *amplitude) {
 			gui_setAlignment(window, gui_MIDDLE_LEFT);
-			gui_drawText(window, "VCO", x, y);
+			gui_drawText(window, "Oscillator", x, y);
 			gui_drawHorizontalSlider(window, frequency, true, x, y+2, 100, 15);
 			gui_drawText(window, "frequency", x+7, y+2);
 			gui_drawHorizontalSlider(window, amplitude, true, x, y+4, 100, 15);
@@ -75,6 +75,7 @@ int main(void) {
 	gui_setGridSize(&window, 40, 40);
 	float frequencies[SYNTH_SIZE] = {[0 ... 5] = 0.5};
 	float amplitudes[SYNTH_SIZE] = {[0 ... 5] = 0.5};
+	float unison = 0.5;
 	while (gui_windowIsOpen(&window)) {
 		gui_beginDrawing(&window);
 			// Draw vertical and horizontal rulers.
@@ -88,13 +89,17 @@ int main(void) {
 
 			drawOscillator(&window, 1, 1, frequencies, amplitudes);
 			drawOscillator(&window, 1, 10, frequencies + 1, amplitudes + 1);
+
+			gui_setAlignment(&window, gui_MIDDLE_LEFT);
+			gui_drawHorizontalSlider(&window, &unison, true, 1, 20, 100, 15);
+			gui_drawText(&window, "unison", 8, 20);
 		gui_endDrawing(&window);
 
-		for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-			synth.oscillators[i].frequency = 880*frequencies[i];
-			synth.oscillators[i].amplitude = 5000*amplitudes[i];
-		}
-		synth.oscillators[1].amplitude = amplitudes[1];
+		synth.oscillators[0].frequency = 440*unison + (440 - 440*frequencies[0]);
+		synth.oscillators[0].amplitude = 5000*amplitudes[0];
+
+		synth.oscillators[1].frequency = frequencies[1]*8*440*unison;
+		synth.oscillators[1].amplitude = 2*amplitudes[1];
 	}
 	
 	// printf("Press enter to quit.\n");
