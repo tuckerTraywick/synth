@@ -6,7 +6,7 @@
 
 #define SYNTH_SIZE 8
 
-#define PATCH_SIZE (2*SYNTH_SIZE)
+#define PATCH_SIZE 24
 
 typedef struct Operator {
 	float frequency;
@@ -16,24 +16,22 @@ typedef struct Operator {
 	// float decay;
 	// float sustain;
 	// float release;
-	float level;
-	// float feedback;
 	float input;
 	float output;
 } Operator;
 
 typedef struct Patch {
-	size_t operators[PATCH_SIZE];
-	size_t operatorCount;
+	size_t source;
+	size_t destination;
+	float level;
 } Patch;
 
 typedef struct Synth {
 	Operator operators[SYNTH_SIZE];
-	Patch patches[SYNTH_SIZE];
-	size_t patchCount;
+	Patch patches[PATCH_SIZE];
 	float t;
 } Synth;
 
-float stepSynth(Synth *synth);
+float stepSynth(Synth *synth, float sampleRate);
 
 #endif // SYNTH_H

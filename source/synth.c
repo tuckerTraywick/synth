@@ -3,32 +3,67 @@
 #include <math.h>
 #include "synth.h"
 
-float stepSynth(Synth *synth) {
-	// Clear the inputs.
+#include <stdio.h>
+
+
+float stepSynth(Synth *synth, float sampleRate) {
+	// Zero the inputs.
 	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
 		synth->operators[i].input = 0;
-		synth->operators[i].output = 0;
 	}
-
-	// Step each patch and compute the synth's output.
+	
+	// Route the sources to the destinations.
 	float synthOutput = 0;
-	for (size_t i = 0; i < synth->patchCount; ++i) {
+	for (size_t i = 0; i < PATCH_SIZE; ++i) {
 		Patch *patch = synth->patches + i;
-		float previousOutput = 0;
-		// Step each operator and compute the patch's output.
-		for (size_t j = 0; j < patch->operatorCount; ++j) {
-			if (patch->operators[j] >= SYNTH_SIZE) {
-				synthOutput += previousOutput;
-			} else {
-				Operator *operator = synth->operators + patch->operators[j];
-				operator->input += previousOutput;
-				operator->output = operator->level*sinf(2*M_PI*operator->frequency*synth->t + operator->input + operator->phase) + operator->offset;
-				previousOutput = operator->output;
-			}
+		if (patch->source == 0 && patch->destination == 0 && patch->level == 0) {
+			break; // If we encounter an empty patch, there's no use continuing.
+		}
+
+		Operator *source = synth->operators + patch->source;
+		if (patch->destination >= SYNTH_SIZE) {
+			// If the destination is not a real operator, route it to the output of the synth.
+			synthOutput += patch->level*source->output;
+		} else {
+			Operator *destination = synth->operators + patch->destination;
+			destination->input += patch->level*source->output;
 		}
 	}
 
-	synth->t += 1.0f/44100.0f;
+	// Compute the output of each operator.
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		Operator *operator = synth->operators + i;
+		operator->output = sinf(2*M_PI*operator->frequency*synth->t + operator->input + operator->phase) + operator->offset;
+	}
+
+	// Clear the inputs.
+	// for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+	// 	synth->operators[i].input = 0;
+	// 	synth->operators[i].output = 0;
+	// }
+
+	// // Step each patch and compute the synth's output.
+	// float synthOutput = 0;
+	// for (size_t i = 0; i < PATCH_SIZE; ++i) {
+	// 	Patch *patch = synth->patches + i;
+	// 	if (patch->source == 0 && patch->destination == 0 && patch->level == 0) {
+	// 		break; // If we encounter an empty patch, there's no use continuing.
+	// 	}
+
+	// 	// Compute the output of the source.
+	// 	Operator *source = synth->operators + patch->source;
+	// 	source->output = sinf(2*M_PI*source->frequency*synth->t + source->input + source->phase) + source->offset;
+	// 	// printf("output %zu: %f\n", patch->source, source->output);
+	// 	if (patch->destination >= SYNTH_SIZE) {
+	// 		// If the destination is not a real operator, route it to the output of the synth.
+	// 		synthOutput += patch->level*source->output;
+	// 	} else {
+	// 		Operator *destination = synth->operators + patch->destination;
+	// 		destination->input += patch->level*source->output;
+	// 	}
+	// }
+
+	synth->t += 1.0f/sampleRate;
 	if (synth->t >= 1.0f) {
 		synth->t = 0.0f;
 	}

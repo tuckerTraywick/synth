@@ -10,7 +10,7 @@ static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
 	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
-		output[i] = stepSynth(synth);
+		output[i] = stepSynth(synth, sampleRate);
 	}
 }
 
@@ -29,14 +29,13 @@ int main(void) {
 	// Open an audio device.
 	Synth synth = {
 		.operators = {
-			{.frequency = 440, .level = 1000},
-			{.frequency = 440*4, .level = 1},
-			{.frequency = 880, .level = 3},
+			{.frequency = 440},
+			{.frequency = 440},
 		},
 		.patches = {
-			{.operators = {2, 1, 0, SYNTH_SIZE+1}, .operatorCount = 4}
+			{0, 0, 0.1},
+			{0, 100, 1000},
 		},
-		.patchCount = 1,
 	};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
