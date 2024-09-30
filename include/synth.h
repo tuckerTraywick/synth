@@ -2,11 +2,12 @@
 #define SYNTH_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #define SYNTH_SIZE 6
 
-#define PATCH_SIZE 24
+// #define PATCH_SIZE 24
 
 typedef struct Operator {
 	float frequency;
@@ -21,16 +22,9 @@ typedef struct Operator {
 	float output;
 } Operator;
 
-typedef struct Patch {
-	size_t source;
-	size_t destination;
-	// float level;
-} Patch;
-
 typedef struct Synth {
 	Operator operators[SYNTH_SIZE];
-	Patch patches[PATCH_SIZE];
-	size_t patchCount;
+	bool patches[SYNTH_SIZE][SYNTH_SIZE + 1];
 	float t;
 } Synth;
 

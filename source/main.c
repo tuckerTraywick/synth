@@ -79,14 +79,7 @@ int main(void) {
 	}
 	
 	// Open an audio device.
-	Synth synth = {
-		.patches = {
-			{2, 0},
-			{1, 0},
-			{0, 100},
-		},
-		.patchCount = 3,
-	};
+	Synth synth = {0};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
 		.format = AUDIO_S16,
@@ -114,14 +107,13 @@ int main(void) {
 		return 1;
 	}
 
+	// Initial setup.
 	float baseFrequency = 440;
 	float unison = 0.5;
 	float levels[SYNTH_SIZE] = {[0 ... SYNTH_SIZE-1] = 0.5};
 	float octaves[SYNTH_SIZE] = {0};
-	bool patches[][SYNTH_SIZE + 1] = {[0 ... SYNTH_SIZE+1] = {0}};
 	synth.operators[0].level = 100;
 	synth.operators[0].frequency = 440;
-
 	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
 		synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
 		synth.operators[i].level = 10*levels[i];
@@ -135,8 +127,8 @@ int main(void) {
 	gui_setGridSize(&window, 40, 40);
 	while (gui_windowIsOpen(&window)) {
 		gui_beginDrawing(&window);
-			// Draw vertical and horizontal rulers.
 			#if 0
+				// Draw vertical and horizontal rulers.
 				gui_setAlignment(&window, gui_CENTER);
 				for (unsigned int i = 0; i < window.gridWidth; ++i)
 					gui_drawRectangle(&window, i, 0, 10, 10);
@@ -144,7 +136,7 @@ int main(void) {
 					gui_drawRectangle(&window, 0, i, 10, 10);
 			#endif
 			drawOscillators(&window, 3, 1, levels, octaves);
-			// drawPatches(&window, 14, 18, patches);
+			drawPatches(&window, 14, 18, synth.patches);
 			drawFrequency(&window, 19, 35, &unison);
 		gui_endDrawing(&window);
 

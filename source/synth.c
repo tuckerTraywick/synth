@@ -4,29 +4,21 @@
 #include "synth.h"
 
 float stepSynth(Synth *synth, float sampleRate) {
-	// Zero the inputs.
-	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-		synth->operators[i].input = 0;
-	}
-
-	// Route the sources to the destinations.
 	float synthOutput = 0;
-	for (size_t i = 0; i < synth->patchCount; ++i) {
-		Patch *patch = synth->patches + i;
-		Operator *source = synth->operators + patch->source;
-		if (patch->destination >= SYNTH_SIZE) {
-			// If the destination is not a real operator, route it to the output of the synth.
-			synthOutput += source->output;
-		} else {
-			Operator *destination = synth->operators + patch->destination;
-			destination->input += source->output;
+	for (long i = SYNTH_SIZE - 1; i >= 0; --i) {
+		Operator *source = synth->operators + i;
+		source->output = source->level*(sinf(2*M_PI*source->frequency*synth->t + source->input + source->phase) + source->offset);
+		// Route the output to the other operators.
+		for (size_t j = 0; j < SYNTH_SIZE; ++j) {
+			if (synth->patches[i][j]) {
+				Operator *destination = synth->operators + j;
+				destination->input = source->output;
+			}
 		}
-	}
-
-	// Compute the output of each operator.
-	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-		Operator *operator = synth->operators + i;
-		operator->output = operator->level*(sinf(2*M_PI*operator->frequency*synth->t + operator->input + operator->phase) + operator->offset);
+		// Route the output to the synth output.
+		if (synth->patches[i][SYNTH_SIZE]) {
+			synthOutput += source->output;
+		}
 	}
 
 	synth->t += 1.0f/sampleRate;
