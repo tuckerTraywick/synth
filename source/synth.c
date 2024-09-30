@@ -3,9 +3,6 @@
 #include <math.h>
 #include "synth.h"
 
-#include <stdio.h>
-
-
 float stepSynth(Synth *synth, float sampleRate) {
 	// Zero the inputs.
 	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
@@ -14,7 +11,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 
 	// Route the sources to the destinations.
 	float synthOutput = 0;
-	for (size_t i = 0; i < PATCH_SIZE; ++i) {
+	for (size_t i = 0; i < synth->patchCount; ++i) {
 		Patch *patch = synth->patches + i;
 		Operator *source = synth->operators + patch->source;
 		if (patch->destination >= SYNTH_SIZE) {

@@ -6,11 +6,13 @@
 
 static const int sampleRate = 44100;
 
+static const float multiplier = 100;
+
 static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
 	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
-		output[i] = stepSynth(synth, sampleRate);
+		output[i] = multiplier*stepSynth(synth, sampleRate);
 	}
 }
 
@@ -79,8 +81,11 @@ int main(void) {
 	// Open an audio device.
 	Synth synth = {
 		.patches = {
+			{2, 0},
+			{1, 0},
 			{0, 100},
 		},
+		.patchCount = 3,
 	};
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
@@ -109,10 +114,18 @@ int main(void) {
 		return 1;
 	}
 
-	float frequency = 0;
-	float levels[SYNTH_SIZE] = {0};
+	float baseFrequency = 440;
+	float unison = 0.5;
+	float levels[SYNTH_SIZE] = {[0 ... SYNTH_SIZE-1] = 0.5};
 	float octaves[SYNTH_SIZE] = {0};
 	bool patches[][SYNTH_SIZE + 1] = {[0 ... SYNTH_SIZE+1] = {0}};
+	synth.operators[0].level = 100;
+	synth.operators[0].frequency = 440;
+
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
+		synth.operators[i].level = 10*levels[i];
+	}
 
 	// Run the gui.
 	gui_setBackgroundColor(&window, 0, 0, 0, 255);
@@ -131,13 +144,13 @@ int main(void) {
 					gui_drawRectangle(&window, 0, i, 10, 10);
 			#endif
 			drawOscillators(&window, 3, 1, levels, octaves);
-			drawPatches(&window, 14, 18, patches);
-			drawFrequency(&window, 19, 35, &frequency);
+			// drawPatches(&window, 14, 18, patches);
+			drawFrequency(&window, 19, 35, &unison);
 		gui_endDrawing(&window);
 
 		for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-			synth.operators[i].frequency = 440.0;// ((int)(8*octaves[i] + 1))*frequency;
-			synth.operators[i].level = 100*levels[i];
+			synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
+			synth.operators[i].level = 10*levels[i];
 		}
 	}
 	

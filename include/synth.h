@@ -30,6 +30,7 @@ typedef struct Patch {
 typedef struct Synth {
 	Operator operators[SYNTH_SIZE];
 	Patch patches[PATCH_SIZE];
+	size_t patchCount;
 	float t;
 } Synth;
 
