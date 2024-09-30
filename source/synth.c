@@ -43,16 +43,16 @@ float stepSynth(Synth *synth, float step) {
 			Operator *source = synth->operators + i;
 			
 			// Compute the operator output and route it to the other operators.
-			lane->operatorOutputs[i] = sinf(2*M_PI*source->octave*lane->pitch*lane->tNorm + lane->operatorInputs[i] + source->phase) + source->offset;
+			lane->operatorOutputs[i] = source->level*sinf(2*M_PI*source->octave*lane->pitch*lane->tNorm + lane->operatorInputs[i] + source->phase) + source->offset;
 			for (size_t j = 0; j < OPERATOR_COUNT; ++j) {
 				if (synth->patches[i][j]) {
-					lane->operatorInputs[j] += synth->patches[i][j]*lane->operatorOutputs[i];
+					lane->operatorInputs[j] += lane->operatorOutputs[i];
 				}
 			}
 
 			// Route the operator output to the synth output.
 			if (synth->patches[i][OPERATOR_COUNT]) {
-				lane->output += synth->patches[i][OPERATOR_COUNT]*lane->operatorOutputs[i];
+				lane->output += lane->operatorOutputs[i];
 			}
 
 			// Clear the operator's input.

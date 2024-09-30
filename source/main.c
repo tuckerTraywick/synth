@@ -4,15 +4,15 @@
 #include "synth.h"
 #include "gui.h"
 
-static const int sampleRate = 44100;
+#define SAMPLE_RATE 44100
 
-static const float multiplier = 100;
+#define MULTIPLIER 100
 
 static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
 	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
-		output[i] = multiplier*stepSynth(synth, 1.0f/sampleRate);
+		output[i] = MULTIPLIER*stepSynth(synth, 1.0f/SAMPLE_RATE);
 	}
 }
 
@@ -79,8 +79,9 @@ int main(void) {
 	
 	// Open an audio device.
 	Synth synth = {0};
+	memset(&synth, 0, sizeof (Synth));
 	SDL_AudioSpec audioSpec = {
-		.freq = sampleRate,
+		.freq = SAMPLE_RATE,
 		.format = AUDIO_S16,
 		.channels = 1,
 		.samples = 2048,
@@ -107,25 +108,13 @@ int main(void) {
 	}
 
 	// Initial setup.
-	// float baseFrequency = 440;
-	// float unison = 0.5;
-	// float levels[OPERATOR_COUNT] = {[0 ... OPERATOR_COUNT-1] = 0.5};
-	// float octaves[OPERATOR_COUNT] = {0};
-	// synth.operators[0].attack = 0.5;
-	// synth.operators[0].decay = 0.3;
-	// synth.operators[0].sustain = 0.5;
-	// synth.operators[0].release = 0.2;
-	// for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
-	// 	synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
-	// 	synth.operators[i].level = 10*levels[i];
-	// }
+	float levels[OPERATOR_COUNT] = {[0 ... OPERATOR_COUNT-1] = 0.5};
+	float octaves[OPERATOR_COUNT] = {0};
 	synth.operators[0].octave = 1;
-	synth.operators[1].octave = 1;
-	synth.patches[0][OPERATOR_COUNT] = 1;
-	synth.patches[1][0] = 1;
+	synth.operators[0].level = 1;
+	synth.patches[0][OPERATOR_COUNT] = true;
 
 	startNote(&synth, 440);
-	startNote(&synth, 200);
 
 	// Run the gui.
 	gui_setBackgroundColor(&window, 0, 0, 0, 255);
@@ -143,15 +132,19 @@ int main(void) {
 				for (unsigned int i = 0; i < window.gridHeight; ++i)
 					gui_drawRectangle(&window, 0, i, 10, 10);
 			#endif
-			// drawOscillators(&window, 3, 1, levels, octaves);
-			// drawPatches(&window, 14, 18, synth.patches);
-			// drawFrequency(&window, 19, 35, &unison);
+			drawOscillators(&window, 3, 1, levels, octaves);
+			drawPatches(&window, 14, 18, synth.patches);
+
+			gui_setAlignment(&window, gui_CENTER);
+			if (gui_drawButton(&window, "play", 19, 35)) {
+				startNote(&synth, 440);
+			}
 		gui_endDrawing(&window);
 
-		// for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
-		// 	synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
-		// 	synth.operators[i].level = 10*levels[i];
-		// }
+		for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
+			synth.operators[i].octave = (int)(3*octaves[i] + 1);
+			synth.operators[i].level = levels[i];
+		}
 	}
 	
 	// Cleanup.

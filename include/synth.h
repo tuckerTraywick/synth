@@ -12,6 +12,7 @@
 #define MAX_NOTE_LENGTH 1
 
 typedef struct Operator {
+	float level;
 	float octave;
 	float phase;
 	float offset;
@@ -34,7 +35,7 @@ typedef struct Lane {
 
 typedef struct Synth {
 	Operator operators[OPERATOR_COUNT];
-	float patches[OPERATOR_COUNT][OPERATOR_COUNT + 1];
+	bool patches[OPERATOR_COUNT][OPERATOR_COUNT + 1];
 	Lane lanes[MAX_POLYPHONY];
 	size_t nextLane;
 } Synth;
