@@ -12,7 +12,7 @@ static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
 	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
-		output[i] = multiplier*stepSynth(synth, sampleRate);
+		output[i] = multiplier*stepSynth(synth, 1.0f/sampleRate);
 	}
 }
 
@@ -24,7 +24,7 @@ static void drawOscillators(gui_Window *window, unsigned int x, unsigned int y, 
 	gui_setAlignment(window, gui_MIDDLE_LEFT);
 	gui_drawText(window, "Oscillator Levels", x + 1, y);
 	char number[] = "1";
-	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
 		gui_drawText(window, number, x + 3, y + 2 + 2*i);
 		drawOscillator(window, x + 5, y + 2 + 2*i, levels + i);
 		++number[0];
@@ -32,29 +32,28 @@ static void drawOscillators(gui_Window *window, unsigned int x, unsigned int y, 
 
 	gui_drawText(window, "Oscillator Octaves", x + 17, y);
 	number[0] = '1';
-	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
 		gui_drawText(window, number, x + 3 + 17, y + 2 + 2*i);
 		drawOscillator(window, x + 5 + 17, y + 2 + 2*i, octaves + i);
 		++number[0];
 	}
 }
 
-static void drawPatches(gui_Window *window, unsigned int x, unsigned int y, bool patches[][SYNTH_SIZE + 1]) {
+static void drawPatches(gui_Window *window, unsigned int x, unsigned int y, bool patches[][OPERATOR_COUNT + 1]) {
 	gui_setAlignment(window, gui_MIDDLE_LEFT);
 	gui_drawText(window, "Patches", x + 2, y - 1);
 	gui_setAlignment(window, gui_CENTER);
 
 	char number[] = "1";
-	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
 		gui_drawText(window, number, x - 3, y + 2*i + 3);
 		gui_drawText(window, number, x + 2*i - 1, y + 1);
 		++number[0];
 	}
-	// gui_drawText(window, "out", x - 3, y + 2*SYNTH_SIZE + 3);
-	gui_drawText(window, "out", x + 2*SYNTH_SIZE - 1, y + 1);
+	gui_drawText(window, "out", x + 2*OPERATOR_COUNT - 1, y + 1);
 
-	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-		for (size_t j = 0; j <= SYNTH_SIZE; ++j) {
+	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
+		for (size_t j = 0; j <= OPERATOR_COUNT; ++j) {
 			gui_drawCheckbox(window, patches[i] + j, 20, x + 2*j - 1, y + 2*i + 3);
 		}
 	}
@@ -108,16 +107,25 @@ int main(void) {
 	}
 
 	// Initial setup.
-	float baseFrequency = 440;
-	float unison = 0.5;
-	float levels[SYNTH_SIZE] = {[0 ... SYNTH_SIZE-1] = 0.5};
-	float octaves[SYNTH_SIZE] = {0};
-	synth.operators[0].level = 100;
-	synth.operators[0].frequency = 440;
-	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-		synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
-		synth.operators[i].level = 10*levels[i];
-	}
+	// float baseFrequency = 440;
+	// float unison = 0.5;
+	// float levels[OPERATOR_COUNT] = {[0 ... OPERATOR_COUNT-1] = 0.5};
+	// float octaves[OPERATOR_COUNT] = {0};
+	// synth.operators[0].attack = 0.5;
+	// synth.operators[0].decay = 0.3;
+	// synth.operators[0].sustain = 0.5;
+	// synth.operators[0].release = 0.2;
+	// for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
+	// 	synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
+	// 	synth.operators[i].level = 10*levels[i];
+	// }
+	synth.operators[0].octave = 1;
+	synth.operators[1].octave = 1;
+	synth.patches[0][OPERATOR_COUNT] = 1;
+	synth.patches[1][0] = 1;
+
+	startNote(&synth, 440);
+	startNote(&synth, 200);
 
 	// Run the gui.
 	gui_setBackgroundColor(&window, 0, 0, 0, 255);
@@ -135,20 +143,19 @@ int main(void) {
 				for (unsigned int i = 0; i < window.gridHeight; ++i)
 					gui_drawRectangle(&window, 0, i, 10, 10);
 			#endif
-			drawOscillators(&window, 3, 1, levels, octaves);
-			drawPatches(&window, 14, 18, synth.patches);
-			drawFrequency(&window, 19, 35, &unison);
+			// drawOscillators(&window, 3, 1, levels, octaves);
+			// drawPatches(&window, 14, 18, synth.patches);
+			// drawFrequency(&window, 19, 35, &unison);
 		gui_endDrawing(&window);
 
-		for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-			synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
-			synth.operators[i].level = 10*levels[i];
-		}
+		// for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
+		// 	synth.operators[i].frequency = (unison + 0.5)*baseFrequency + (int)(4*octaves[i])*baseFrequency;
+		// 	synth.operators[i].level = 10*levels[i];
+		// }
 	}
 	
 	// Cleanup.
 	SDL_CloseAudioDevice(playbackDevice);
 	gui_teardown();
-	// SDL_Quit();
 	return 0;
 }
