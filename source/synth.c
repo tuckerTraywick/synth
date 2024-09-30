@@ -16,24 +16,20 @@ float stepSynth(Synth *synth, float sampleRate) {
 	float synthOutput = 0;
 	for (size_t i = 0; i < PATCH_SIZE; ++i) {
 		Patch *patch = synth->patches + i;
-		if (patch->source == 0 && patch->destination == 0 && patch->level == 0) {
-			break; // If we encounter an empty patch, there's no use continuing.
-		}
-
 		Operator *source = synth->operators + patch->source;
 		if (patch->destination >= SYNTH_SIZE) {
 			// If the destination is not a real operator, route it to the output of the synth.
-			synthOutput += patch->level*source->output;
+			synthOutput += source->output;
 		} else {
 			Operator *destination = synth->operators + patch->destination;
-			destination->input += patch->level*source->output;
+			destination->input += source->output;
 		}
 	}
 
 	// Compute the output of each operator.
 	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
 		Operator *operator = synth->operators + i;
-		operator->output = sinf(2*M_PI*operator->frequency*synth->t + operator->input + operator->phase) + operator->offset;
+		operator->output = operator->level*(sinf(2*M_PI*operator->frequency*synth->t + operator->input + operator->phase) + operator->offset);
 	}
 
 	synth->t += 1.0f/sampleRate;

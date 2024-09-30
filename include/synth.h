@@ -4,12 +4,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define SYNTH_SIZE 8
+#define SYNTH_SIZE 6
 
 #define PATCH_SIZE 24
 
 typedef struct Operator {
-	float multiplier;
 	float frequency;
 	float phase;
 	float offset;
@@ -17,6 +16,7 @@ typedef struct Operator {
 	// float decay;
 	// float sustain;
 	// float release;
+	float level;
 	float input;
 	float output;
 } Operator;
@@ -24,7 +24,7 @@ typedef struct Operator {
 typedef struct Patch {
 	size_t source;
 	size_t destination;
-	float level;
+	// float level;
 } Patch;
 
 typedef struct Synth {

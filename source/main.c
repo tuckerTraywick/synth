@@ -18,15 +18,50 @@ static void drawOscillator(gui_Window *window, unsigned int x, unsigned int y, f
 	gui_drawHorizontalSlider(window, level, true, x, y, 100, 15);
 }
 
-static void drawOscillators(gui_Window *window, unsigned int x, unsigned int y, float *levels) {
+static void drawOscillators(gui_Window *window, unsigned int x, unsigned int y, float *levels, float *octaves) {
 	gui_setAlignment(window, gui_MIDDLE_LEFT);
-	gui_drawText(window, "Oscillators", x, y);
-	char number[] = "0";
+	gui_drawText(window, "Oscillator Levels", x + 1, y);
+	char number[] = "1";
 	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-		gui_drawText(window, number, x, y + 2 + 2*i);
-		drawOscillator(window, x + 2, y + 2 + 2*i, levels + i);
-		number[0] += 1;
+		gui_drawText(window, number, x + 3, y + 2 + 2*i);
+		drawOscillator(window, x + 5, y + 2 + 2*i, levels + i);
+		++number[0];
 	}
+
+	gui_drawText(window, "Oscillator Octaves", x + 17, y);
+	number[0] = '1';
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		gui_drawText(window, number, x + 3 + 17, y + 2 + 2*i);
+		drawOscillator(window, x + 5 + 17, y + 2 + 2*i, octaves + i);
+		++number[0];
+	}
+}
+
+static void drawPatches(gui_Window *window, unsigned int x, unsigned int y, bool patches[][SYNTH_SIZE + 1]) {
+	gui_setAlignment(window, gui_MIDDLE_LEFT);
+	gui_drawText(window, "Patches", x + 2, y - 1);
+	gui_setAlignment(window, gui_CENTER);
+
+	char number[] = "1";
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		gui_drawText(window, number, x - 3, y + 2*i + 3);
+		gui_drawText(window, number, x + 2*i - 1, y + 1);
+		++number[0];
+	}
+	// gui_drawText(window, "out", x - 3, y + 2*SYNTH_SIZE + 3);
+	gui_drawText(window, "out", x + 2*SYNTH_SIZE - 1, y + 1);
+
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		for (size_t j = 0; j <= SYNTH_SIZE; ++j) {
+			gui_drawCheckbox(window, patches[i] + j, 20, x + 2*j - 1, y + 2*i + 3);
+		}
+	}
+}
+
+static void drawFrequency(gui_Window *window, unsigned int x, unsigned int y, float *frequency) {
+	gui_setAlignment(window, gui_CENTER);
+	gui_drawText(window, "Frequency", x, y);
+	gui_drawHorizontalSlider(window, frequency, true, x, y + 2, 100, 15);
 }
 
 int main(void) {
@@ -44,7 +79,7 @@ int main(void) {
 	// Open an audio device.
 	Synth synth = {
 		.patches = {
-			{0, 100, 1000},
+			{0, 100},
 		},
 	};
 	SDL_AudioSpec audioSpec = {
@@ -74,12 +109,15 @@ int main(void) {
 		return 1;
 	}
 
-	float frequency = 440.0f;
-	float levels[SYNTH_SIZE] = {0};//{[0 ... SYNTH_SIZE-1] = 0.5f};
+	float frequency = 0;
+	float levels[SYNTH_SIZE] = {0};
+	float octaves[SYNTH_SIZE] = {0};
+	bool patches[][SYNTH_SIZE + 1] = {[0 ... SYNTH_SIZE+1] = {0}};
+
 	// Run the gui.
 	gui_setBackgroundColor(&window, 0, 0, 0, 255);
 	gui_setDrawColor(&window, 255, 255, 255, 255);
-	gui_setFillColor(&window, 64, 64, 64, 255);
+	gui_setFillColor(&window, 90, 90, 90, 255);
 	gui_setAccentColor(&window, 255, 0, 0, 255);
 	gui_setGridSize(&window, 40, 40);
 	while (gui_windowIsOpen(&window)) {
@@ -92,11 +130,14 @@ int main(void) {
 				for (unsigned int i = 0; i < window.gridHeight; ++i)
 					gui_drawRectangle(&window, 0, i, 10, 10);
 			#endif
-			drawOscillators(&window, 1, 1, levels);
+			drawOscillators(&window, 3, 1, levels, octaves);
+			drawPatches(&window, 14, 18, patches);
+			drawFrequency(&window, 19, 35, &frequency);
 		gui_endDrawing(&window);
 
 		for (size_t i = 0; i < SYNTH_SIZE; ++i) {
-			synth.operators[i].frequency = ((int)(8*levels[i] + 1))*frequency;
+			synth.operators[i].frequency = 440.0;// ((int)(8*octaves[i] + 1))*frequency;
+			synth.operators[i].level = 100*levels[i];
 		}
 	}
 	
