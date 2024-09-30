@@ -9,6 +9,7 @@
 #define PATCH_SIZE 24
 
 typedef struct Operator {
+	float multiplier;
 	float frequency;
 	float phase;
 	float offset;

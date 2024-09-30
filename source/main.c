@@ -14,6 +14,21 @@ static void playSound(void *userData, uint8_t *stream, int length) {
 	}
 }
 
+static void drawOscillator(gui_Window *window, unsigned int x, unsigned int y, float *level) {
+	gui_drawHorizontalSlider(window, level, true, x, y, 100, 15);
+}
+
+static void drawOscillators(gui_Window *window, unsigned int x, unsigned int y, float *levels) {
+	gui_setAlignment(window, gui_MIDDLE_LEFT);
+	gui_drawText(window, "Oscillators", x, y);
+	char number[] = "0";
+	for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+		gui_drawText(window, number, x, y + 2 + 2*i);
+		drawOscillator(window, x + 2, y + 2 + 2*i, levels + i);
+		number[0] += 1;
+	}
+}
+
 int main(void) {
 	// Initialization.
 	if (gui_setup()) {
@@ -28,12 +43,7 @@ int main(void) {
 	
 	// Open an audio device.
 	Synth synth = {
-		.operators = {
-			{.frequency = 440},
-			{.frequency = 440},
-		},
 		.patches = {
-			{0, 0, 0.1},
 			{0, 100, 1000},
 		},
 	};
@@ -64,6 +74,8 @@ int main(void) {
 		return 1;
 	}
 
+	float frequency = 440.0f;
+	float levels[SYNTH_SIZE] = {0};//{[0 ... SYNTH_SIZE-1] = 0.5f};
 	// Run the gui.
 	gui_setBackgroundColor(&window, 0, 0, 0, 255);
 	gui_setDrawColor(&window, 255, 255, 255, 255);
@@ -80,7 +92,12 @@ int main(void) {
 				for (unsigned int i = 0; i < window.gridHeight; ++i)
 					gui_drawRectangle(&window, 0, i, 10, 10);
 			#endif
+			drawOscillators(&window, 1, 1, levels);
 		gui_endDrawing(&window);
+
+		for (size_t i = 0; i < SYNTH_SIZE; ++i) {
+			synth.operators[i].frequency = ((int)(8*levels[i] + 1))*frequency;
+		}
 	}
 	
 	// Cleanup.
