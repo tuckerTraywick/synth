@@ -16,18 +16,14 @@ float stepSynth(Synth *synth, size_t sampleRate) {
 		}
 
 		// Compute the operator output.
-		size_t period = sampleRate/source->pitch;
-		size_t t = synth->t%period;
 		if (source->type == SINE) {
+			float period = (float)sampleRate/source->pitch;
+			float t = fmodf(synth->t, period);
 			source->output = source->level*sinf(2*M_PI*t/period + source->input + source->phase) + source->offset;
 		} else if (source->type == SQUARE) {
-			source->output = source->level*sinf(2*M_PI*t/period + source->input + source->phase) + source->offset;
-			if (source->output < 0) {
-				source->output = -source->level;
-			} else if (source->output > 0) {
-				source->output = source->level;
-			}
-			// source->output = (t < period/2) ? source->level : -source->level;
+			size_t period = sampleRate/source->pitch;
+			size_t t = synth->t%period;
+			source->output = (t < period/2) ? source->level : -source->level;
 		}
 
 		// Route the output to the other operators.
