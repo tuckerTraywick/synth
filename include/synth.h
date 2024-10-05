@@ -5,45 +5,29 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define OPERATOR_COUNT 6
+static const size_t operatorCount = 4;
 
-#define MAX_POLYPHONY 24
-
-#define MAX_NOTE_LENGTH 1
+typedef enum WaveType {
+	SINE,
+	SQUARE,
+} WaveType;
 
 typedef struct Operator {
+	WaveType type;
 	float level;
-	float octave;
+	float pitch;
 	float phase;
 	float offset;
-	float attack; // In seconds.
-	float decay; // In seconds.
-	float sustain;
-	float release; // In seconds.
-	float envelopeLength; // In seconds.
+	float input;
+	float output;
 } Operator;
 
-typedef struct Lane {
-	bool pressed;
-	float pitch; // In Hz.
-	float t;
-	float tNorm; // t normalized between 0 and 1.
-	float output;
-	float operatorInputs[OPERATOR_COUNT];
-	float operatorOutputs[OPERATOR_COUNT];
-} Lane;
-
 typedef struct Synth {
-	Operator operators[OPERATOR_COUNT];
-	bool patches[OPERATOR_COUNT][OPERATOR_COUNT + 1];
-	Lane lanes[MAX_POLYPHONY];
-	size_t nextLane;
+	Operator operators[operatorCount];
+	bool patches[operatorCount][operatorCount + 1];
+	size_t t;
 } Synth;
 
-void startNote(Synth *synth, float pitch);
-
-void stopNote(Synth *synth, float pitch);
-
-float stepSynth(Synth *synth, float step);
+float stepSynth(Synth *synth, size_t sampleRate);
 
 #endif // SYNTH_H

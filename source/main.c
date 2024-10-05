@@ -4,15 +4,15 @@
 #include "synth.h"
 #include "gui.h"
 
-#define SAMPLE_RATE 44100
+const size_t sampleRate = 44100;
 
-#define MULTIPLIER 100
+const float multiplier = 1000;
 
 static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
 	for (size_t i = 0; i < length/sizeof (uint16_t); ++i) {
-		output[i] = MULTIPLIER*stepSynth(synth, 1.0f/SAMPLE_RATE);
+		output[i] = multiplier*stepSynth(synth, sampleRate);
 	}
 }
 
@@ -24,7 +24,7 @@ static void drawOscillators(gui_Window *window, unsigned int x, unsigned int y, 
 	gui_setAlignment(window, gui_MIDDLE_LEFT);
 	gui_drawText(window, "Oscillator Levels", x + 1, y);
 	char number[] = "1";
-	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
+	for (size_t i = 0; i < operatorCount; ++i) {
 		gui_drawText(window, number, x + 3, y + 2 + 2*i);
 		drawOscillator(window, x + 5, y + 2 + 2*i, levels + i);
 		++number[0];
@@ -32,28 +32,28 @@ static void drawOscillators(gui_Window *window, unsigned int x, unsigned int y, 
 
 	gui_drawText(window, "Oscillator Octaves", x + 17, y);
 	number[0] = '1';
-	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
+	for (size_t i = 0; i < operatorCount; ++i) {
 		gui_drawText(window, number, x + 3 + 17, y + 2 + 2*i);
 		drawOscillator(window, x + 5 + 17, y + 2 + 2*i, octaves + i);
 		++number[0];
 	}
 }
 
-static void drawPatches(gui_Window *window, unsigned int x, unsigned int y, bool patches[][OPERATOR_COUNT + 1]) {
+static void drawPatches(gui_Window *window, unsigned int x, unsigned int y, bool patches[][operatorCount + 1]) {
 	gui_setAlignment(window, gui_MIDDLE_LEFT);
 	gui_drawText(window, "Patches", x + 2, y - 1);
 	gui_setAlignment(window, gui_CENTER);
 
 	char number[] = "1";
-	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
+	for (size_t i = 0; i < operatorCount; ++i) {
 		gui_drawText(window, number, x - 3, y + 2*i + 3);
 		gui_drawText(window, number, x + 2*i - 1, y + 1);
 		++number[0];
 	}
-	gui_drawText(window, "out", x + 2*OPERATOR_COUNT - 1, y + 1);
+	gui_drawText(window, "out", x + 2*operatorCount - 1, y + 1);
 
-	for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
-		for (size_t j = 0; j <= OPERATOR_COUNT; ++j) {
+	for (size_t i = 0; i < operatorCount; ++i) {
+		for (size_t j = 0; j <= operatorCount; ++j) {
 			gui_drawCheckbox(window, patches[i] + j, 20, x + 2*j - 1, y + 2*i + 3);
 		}
 	}
@@ -79,9 +79,9 @@ int main(void) {
 	
 	// Open an audio device.
 	Synth synth = {0};
-	memset(&synth, 0, sizeof (Synth));
+	// memset(&synth, 0, sizeof (Synth));
 	SDL_AudioSpec audioSpec = {
-		.freq = SAMPLE_RATE,
+		.freq = sampleRate,
 		.format = AUDIO_S16,
 		.channels = 1,
 		.samples = 2048,
@@ -95,7 +95,7 @@ int main(void) {
 		return 1;
 	}
 
-	// Begin playback and wait until the user quits.
+	// Begin playback.
 	SDL_PauseAudioDevice(playbackDevice, 0);
 
 	// Create a window.
@@ -108,44 +108,63 @@ int main(void) {
 	}
 
 	// Initial setup.
-	float levels[OPERATOR_COUNT] = {[0 ... OPERATOR_COUNT-1] = 0.5};
-	float octaves[OPERATOR_COUNT] = {0};
-	synth.operators[0].octave = 1;
+	synth.patches[0][operatorCount] = true;
+	synth.operators[0].type = SQUARE;
 	synth.operators[0].level = 1;
-	synth.patches[0][OPERATOR_COUNT] = true;
+	synth.operators[0].pitch = 440;
 
-	startNote(&synth, 440);
-
+	// synth.patches[1][0] = true;
+	// synth.operators[1].type = SQUARE;
+	// synth.operators[1].level = 1;
+	// synth.operators[1].pitch = 400;
+	
 	// Run the gui.
-	gui_setBackgroundColor(&window, 0, 0, 0, 255);
-	gui_setDrawColor(&window, 255, 255, 255, 255);
-	gui_setFillColor(&window, 90, 90, 90, 255);
-	gui_setAccentColor(&window, 255, 0, 0, 255);
-	gui_setGridSize(&window, 40, 40);
-	while (gui_windowIsOpen(&window)) {
-		gui_beginDrawing(&window);
-			#if 0
-				// Draw vertical and horizontal rulers.
-				gui_setAlignment(&window, gui_CENTER);
-				for (unsigned int i = 0; i < window.gridWidth; ++i)
-					gui_drawRectangle(&window, i, 0, 10, 10);
-				for (unsigned int i = 0; i < window.gridHeight; ++i)
-					gui_drawRectangle(&window, 0, i, 10, 10);
-			#endif
-			drawOscillators(&window, 3, 1, levels, octaves);
-			drawPatches(&window, 14, 18, synth.patches);
+	// gui_setBackgroundColor(&window, 0, 0, 0, 255);
+	// gui_setDrawColor(&window, 255, 255, 255, 255);
+	// gui_setFillColor(&window, 90, 90, 90, 255);
+	// gui_setAccentColor(&window, 255, 0, 0, 255);
+	// gui_setGridSize(&window, 40, 40);
+	// while (gui_windowIsOpen(&window)) {
+	// 	gui_beginDrawing(&window);
+	// 		#if 0
+	// 			// Draw vertical and horizontal rulers.
+	// 			gui_setAlignment(&window, gui_CENTER);
+	// 			for (unsigned int i = 0; i < window.gridWidth; ++i)
+	// 				gui_drawRectangle(&window, i, 0, 10, 10);
+	// 			for (unsigned int i = 0; i < window.gridHeight; ++i)
+	// 				gui_drawRectangle(&window, 0, i, 10, 10);
+	// 		#endif
+	// 		drawOscillators(&window, 3, 1, levels, octaves);
+	// 		drawPatches(&window, 14, 18, synth.patches);
+	// 		gui_setAlignment(&window, gui_CENTER);
+	// 		// if (gui_drawButton(&window, "play", 19, 35)) {
+	// 		// 	startNote(&synth, 440);
+	// 		// }
+	// 	gui_endDrawing(&window);
 
-			gui_setAlignment(&window, gui_CENTER);
-			if (gui_drawButton(&window, "play", 19, 35)) {
-				startNote(&synth, 440);
-			}
-		gui_endDrawing(&window);
+	// 	// for (size_t i = 0; i < operatorCount; ++i) {
+	// 	// 	synth.operators[i].octave = (int)(3*octaves[i] + 1);
+	// 	// 	synth.operators[i].level = levels[i];
+	// 	// }
+	// }
 
-		for (size_t i = 0; i < OPERATOR_COUNT; ++i) {
-			synth.operators[i].octave = (int)(3*octaves[i] + 1);
-			synth.operators[i].level = levels[i];
-		}
-	}
+	// size_t sampleCount = sampleRate*10;
+	// uint16_t *samples = malloc(sampleCount*sizeof *samples);
+	// if (!samples) {
+	// 	printf("Bad allocation.\n");
+	// 	return 1;
+	// }
+
+	// // Generate a sample.
+	// for (size_t i = 0; i < sampleCount; ++i) {
+	// 	samples[i] = multiplier*stepSynth(&synth, sampleRate);
+	// }
+	
+	// // Queue the sample.
+	// SDL_QueueAudio(playbackDevice, samples, sampleCount*sizeof *samples);
+
+	printf("Press enter to quit.\n");
+	getchar();
 	
 	// Cleanup.
 	SDL_CloseAudioDevice(playbackDevice);
