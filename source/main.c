@@ -21,11 +21,11 @@ int main(void) {
 	}
 
 	Synth synth = {.level = 4000.0f};
-	synth.operators[0] = (Operator){.level = 1.0f, .pitch = 440.0f, .phase = 0.0f, .type = SQUARE};
+	synth.operators[0] = (Operator){.level = 1.0f, .pitch = 440.0f, .phase = 0.0f, .pulseWidth = 0.5, .type = SINE};
 	synth.patches[0][operatorCount] = true;
 
-	// synth.operators[1] = (Operator){.level = 1.0f, .pitch = 440.0f, .phase = 0.0f, .type = SINE};
-	// synth.patches[1][0] = true;
+	synth.operators[1] = (Operator){.level = 1.0f, .pitch = 300.0f, .phase = 0.0f, .pulseWidth = 0.8, .type = SQUARE};
+	synth.patches[1][0] = true;
 
 	// Open an audio device.
 	SDL_AudioSpec audioSpec = {
