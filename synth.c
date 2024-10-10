@@ -21,17 +21,19 @@ float stepSynth(Synth *synth, size_t sampleRate) {
 			float t = fmodf(synth->t, period);
 			source->output = source->level*sinf(2*M_PI*t/period + source->input + source->phase) + source->offset;
 		} else if (source->type == SQUARE) {
-			size_t period = sampleRate/source->pitch;
-			size_t t = synth->t%period;
-			source->output = (t < period/2) ? source->level : -source->level;
+			float period = (sampleRate/source->pitch);
+			float t = synth->t;//fmodf(synth->t, (period));
+			source->output = source->level*sinf(2*M_PI*t/period + source->input + source->phase) + source->offset;
+			source->output = (source->output <= 0) ? source->level : -source->level;
+			// source->output = (t < period/2.0) ? source->level : -source->level;
 		}
 
 		// Route the output to the other operators.
-		for (size_t j = 0; j < operatorCount; ++j) {
-			if (synth->patches[i][j]) {
-				synth->operators[j].input += source->output;
-			}
-		}
+		// for (size_t j = 0; j < operatorCount; ++j) {
+		// 	if (synth->patches[i][j]) {
+		// 		synth->operators[j].input += source->output;
+		// 	}
+		// }
 
 		// Route the output to the synth output.
 		if (synth->patches[i][operatorCount]) {
