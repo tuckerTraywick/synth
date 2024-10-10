@@ -1,7 +1,6 @@
 #ifndef SYNTH_H
 #define SYNTH_H
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -20,14 +19,16 @@ typedef struct Operator {
 	float offset;
 	float input;
 	float output;
+	float t;
 } Operator;
 
 typedef struct Synth {
 	Operator operators[operatorCount];
 	bool patches[operatorCount][operatorCount + 1];
-	size_t t;
+	float level;
+	// float t;
 } Synth;
 
-float stepSynth(Synth *synth, size_t sampleRate);
+float stepSynth(Synth *synth, float sampleRate);
 
 #endif // SYNTH_H

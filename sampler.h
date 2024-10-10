@@ -8,11 +8,11 @@
 typedef struct Sample {
 	size_t sampleCount;
 	uint16_t *samples;
-	float level;
 } Sample;
 
 typedef struct Lane {
 	Sample sample;
+	float level;
 	size_t t;
 } Lane;
 

@@ -1,23 +1,15 @@
 #include <math.h>
 #include <stdio.h>
 #include "SDL.h"
+#include "synth.h"
 
-const float sampleRate = 48000;
-
-const float multiplier = 1000;
+const float sampleRate = 48000.0f;
 
 static void playSound(void *userData, uint8_t *stream, int length) {
-	float *t = (float*)userData;
+	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
-	float frequency = 440;
-	float period = sampleRate/frequency;
-	float increment = 2*M_PI/period;
 	for (int i = 0; i < length/sizeof *output; ++i) {
-		output[i] = multiplier*sinf(*t);
-		*t += increment;
-		if (*t > 2*M_PI) {
-			*t -= 2*M_PI;
-		}
+		output[i] = stepSynth(synth, sampleRate);
 	}
 }
 
@@ -28,15 +20,21 @@ int main(void) {
 		return 1;
 	}
 
+	Synth synth = {.level = 4000.0f};
+	synth.operators[0] = (Operator){.level = 1.0f, .pitch = 440.0f, .phase = 0.0f, .type = SQUARE};
+	synth.patches[0][operatorCount] = true;
+
+	// synth.operators[1] = (Operator){.level = 1.0f, .pitch = 440.0f, .phase = 0.0f, .type = SINE};
+	// synth.patches[1][0] = true;
+
 	// Open an audio device.
-	float t = 0;
 	SDL_AudioSpec audioSpec = {
 		.freq = sampleRate,
 		.format = AUDIO_S16,
 		.channels = 1,
 		.samples = 2048,
 		.callback = &playSound,
-        .userdata = &t,
+        .userdata = &synth,
 	};
 	SDL_AudioDeviceID playbackDevice = SDL_OpenAudioDevice(NULL, 0, &audioSpec, &audioSpec, 0);
 	if (playbackDevice == 0) {
@@ -48,7 +46,7 @@ int main(void) {
 	// Begin playback.
 	SDL_PauseAudioDevice(playbackDevice, 0);
 
-	SDL_Delay(2000);
+	SDL_Delay(3000);
 
 	// Cleanup.
 	SDL_CloseAudioDevice(playbackDevice);
