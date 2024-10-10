@@ -25,21 +25,21 @@ float stepSynth(Synth *synth, float sampleRate) {
 				source->t -= 2.0f*M_PI;
 			}
 		} else if (source->type == SQUARE) {
-			source->output = (source->t + source->phase < 2.0f*M_PI*source->pulseWidth) ? source->offset - 1.0f : source->offset + 1.0f;
+			source->output = (fmodf(source->t + source->phase, 2.0f*M_PI) < 2.0f*M_PI*source->pulseWidth) ? source->offset - source->amplitude/2.0f : source->offset + source->amplitude/2.0f;
 			source->t += increment;
 			if (source->t > 2.0f*M_PI) {
 				source->t = 0.0f;
 			}
 		} else if (source->type == TRIANGLE) {
-			float tNorm = (source->t + source->phase)/2.0f/M_PI;
-			source->output = (tNorm < 0.5) ? tNorm - 0.5f + source->offset : 1.0f - tNorm - 0.5f + source->offset;
+			float tNorm = fmodf(source->t + source->phase, 2.0f*M_PI)/2.0f/M_PI;
+			source->output = (tNorm < 0.5) ? source->amplitude*tNorm/2.0f + source->offset : source->amplitude*(1.0f - tNorm)/2.0f + source->offset;
 			source->t += increment;
 			if (source->t > 2.0f*M_PI) {
 				source->t = 0.0f;
 			}
 		} else if (source->type == SAWTOOTH) {
 			float tNorm = (source->t + source->phase)/2.0f/M_PI;
-			source->output = tNorm - 0.5f + source->offset;
+			source->output = source->amplitude*(tNorm - 0.5f) + source->offset;
 			source->t += increment;
 			if (source->t > 2.0f*M_PI) {
 				source->t = 0.0f;

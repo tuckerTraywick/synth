@@ -23,12 +23,10 @@ int main(void) {
 	Synth synth = {
 		.level = 4000.0f,
 		.operators = {
-			{.type = SQUARE, .pitch = 440.0f, .pulseWidth = 0.5},
-			{.type = SINE, .pitch = 1.0f, .amplitude = 0.4f, .offset = 0.5f},
+			{.type = SINE, .pitch = 440.0f, .amplitude = 1.0f, .offset = 1.0f, .pulseWidth = 0.5},
 		},
 		.patches = {
 			{.source = &synth.operators[0].output, .destination = &synth.output, .level = 1.0f, .modulate = true},
-			{.source = &synth.operators[1].output, .destination = &synth.operators[0].pulseWidth, .level = 1.0f, .modulate = false},
 		},
 	};
 
