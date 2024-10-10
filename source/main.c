@@ -20,12 +20,17 @@ int main(void) {
 		return 1;
 	}
 
-	Synth synth = {.level = 4000.0f};
-	synth.operators[0] = (Operator){.level = 1.0f, .pitch = 440.0f, .phase = 0.0f, .pulseWidth = 0.5, .type = SINE};
-	synth.patches[0][operatorCount] = true;
-
-	synth.operators[1] = (Operator){.level = 1.0f, .pitch = 300.0f, .phase = 0.0f, .pulseWidth = 0.8, .type = SQUARE};
-	synth.patches[1][0] = true;
+	Synth synth = {
+		.level = 4000.0f,
+		.operators = {
+			{.type = SQUARE, .pitch = 440.0f, .pulseWidth = 0.5},
+			{.type = SINE, .pitch = 1.0f, .amplitude = 0.4f, .offset = 0.5f},
+		},
+		.patches = {
+			{.source = &synth.operators[0].output, .destination = &synth.output, .level = 1.0f, .modulate = true},
+			{.source = &synth.operators[1].output, .destination = &synth.operators[0].pulseWidth, .level = 1.0f, .modulate = false},
+		},
+	};
 
 	// Open an audio device.
 	SDL_AudioSpec audioSpec = {
@@ -46,7 +51,9 @@ int main(void) {
 	// Begin playback.
 	SDL_PauseAudioDevice(playbackDevice, 0);
 
-	SDL_Delay(3000);
+	// Wait to quit.
+	printf("Press enter to stop.\n");
+	getchar();
 
 	// Cleanup.
 	SDL_CloseAudioDevice(playbackDevice);

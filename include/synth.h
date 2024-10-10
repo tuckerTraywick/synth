@@ -4,7 +4,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-static const size_t operatorCount = 4;
+static const size_t operatorCount = 10;
+
+static const size_t patchCount = 20;
 
 typedef enum WaveType {
 	OFF,
@@ -16,20 +18,27 @@ typedef enum WaveType {
 
 typedef struct Operator {
 	WaveType type;
-	float level;
+	float amplitude;
 	float pitch;
 	float phase;
 	float offset;
-	float pulseWidth;
-	float input;
+	float pulseWidth; // Only used by square waves.
+	float t; // [0, 2pi] regardless of wave type.
 	float output;
-	float t; // [0, 2pi].
 } Operator;
+
+typedef struct Patch {
+	float *source;
+	float *destination;
+	float level;
+	bool modulate; // Adds the source to the destination when true, overwrites the destination with the source when false.
+} Patch;
 
 typedef struct Synth {
 	Operator operators[operatorCount];
-	bool patches[operatorCount][operatorCount + 1];
+	Patch patches[patchCount];
 	float level;
+	float output;
 } Synth;
 
 float stepSynth(Synth *synth, float sampleRate);

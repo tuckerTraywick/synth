@@ -6,7 +6,8 @@
 #include <stdio.h>
 
 float stepSynth(Synth *synth, float sampleRate) {
-	float synthOutput = 0.0f;
+	synth->output = 0.0f;
+	// Compute the outputs of the operators.
 	for (size_t i = 0; i < operatorCount; ++i) {
 		Operator *source = synth->operators + i;
 
@@ -18,47 +19,46 @@ float stepSynth(Synth *synth, float sampleRate) {
 		float period = sampleRate/source->pitch;
 		float increment = 2.0f*M_PI/period;
 		if (source->type == SINE) {
-			source->output = source->level*sinf(source->t + source->input + source->phase);
+			source->output = source->amplitude*sinf(source->t + source->phase) + source->offset;
 			source->t += increment;
 			if (source->t > 2.0f*M_PI) {
 				source->t -= 2.0f*M_PI;
 			}
 		} else if (source->type == SQUARE) {
-			source->output = (source->t + source->input + source->phase < 2.0f*M_PI*source->pulseWidth) ? -source->level : source->level;
+			source->output = (source->t + source->phase < 2.0f*M_PI*source->pulseWidth) ? source->offset - 1.0f : source->offset + 1.0f;
 			source->t += increment;
 			if (source->t > 2.0f*M_PI) {
 				source->t = 0.0f;
 			}
 		} else if (source->type == TRIANGLE) {
-			float tNorm = (source->t + source->input + source->phase)/2.0f/M_PI;
-			source->output = (tNorm < 0.5) ? source->level*tNorm - source->level/2.0f : source->level*(1.0f - tNorm) - source->level/2.0f;
+			float tNorm = (source->t + source->phase)/2.0f/M_PI;
+			source->output = (tNorm < 0.5) ? tNorm - 0.5f + source->offset : 1.0f - tNorm - 0.5f + source->offset;
 			source->t += increment;
 			if (source->t > 2.0f*M_PI) {
 				source->t = 0.0f;
 			}
 		} else if (source->type == SAWTOOTH) {
-			float tNorm = (source->t + source->input + source->phase)/2.0f/M_PI;
-			source->output = tNorm*source->level - source->level/2.0f;
+			float tNorm = (source->t + source->phase)/2.0f/M_PI;
+			source->output = tNorm - 0.5f + source->offset;
 			source->t += increment;
 			if (source->t > 2.0f*M_PI) {
 				source->t = 0.0f;
 			}
 		}
-
-		// Route the output to the other operators.
-		for (size_t j = 0; j < operatorCount; ++j) {
-			if (synth->patches[i][j]) {
-				synth->operators[j].input += source->output;
-			}
-		}
-
-		// Route the output to the synth output.
-		if (synth->patches[i][operatorCount]) {
-			synthOutput += source->output;
-		}
-
-		// Clear the operator's input.
-		source->input = 0.0f;
 	}
-	return synth->level*synthOutput;
+
+	// Route the patches.
+	for (size_t i = 0; i < patchCount; ++i) {
+		if (synth->patches[i].source == NULL) {
+			break;
+		}
+
+		if (synth->patches[i].modulate) {
+			*synth->patches[i].destination += *synth->patches[i].source*synth->patches[i].level;
+		} else {
+			*synth->patches[i].destination = *synth->patches[i].source*synth->patches[i].level;
+		}
+	}
+
+	return synth->level*synth->output;
 }
