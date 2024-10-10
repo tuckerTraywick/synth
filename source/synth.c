@@ -7,15 +7,14 @@
 
 float stepSynth(Synth *synth, float sampleRate) {
 	synth->output = 0.0f;
-	// Compute the outputs of the operators.
-	for (size_t i = 0; i < operatorCount; ++i) {
-		Operator *source = synth->operators + i;
+	// Compute the outputs of the oscillators.
+	for (size_t i = 0; i < oscillatorCount; ++i) {
+		Oscillator *source = synth->oscillators + i;
 
 		if (source->type == OFF) {
 			continue;
 		}
 
-		// Compute the operator output.
 		float period = sampleRate/source->pitch;
 		float increment = 2.0f*M_PI/period;
 		if (source->type == SINE) {
@@ -44,19 +43,28 @@ float stepSynth(Synth *synth, float sampleRate) {
 			if (source->t > 2.0f*M_PI) {
 				source->t = 0.0f;
 			}
+		} else if (source->type == REVERSE_SAWTOOTH) {
+			float tNorm = (source->t + source->phase)/2.0f/M_PI;
+			source->output = source->amplitude*(1.0f - tNorm - 0.5f) + source->offset;
+			source->t += increment;
+			if (source->t > 2.0f*M_PI) {
+				source->t = 0.0f;
+			}
 		}
 	}
 
-	// Route the patches.
-	for (size_t i = 0; i < patchCount; ++i) {
-		if (synth->patches[i].source == NULL) {
+	// Route the connections.
+	for (size_t i = 0; i < connectionCount; ++i) {
+		if (synth->connections[i].source == NULL) {
 			break;
 		}
 
-		if (synth->patches[i].modulate) {
-			*synth->patches[i].destination += *synth->patches[i].source*synth->patches[i].level;
-		} else {
-			*synth->patches[i].destination = *synth->patches[i].source*synth->patches[i].level;
+		if (synth->connections[i].type == SET) {
+			*synth->connections[i].destination = *synth->connections[i].source*synth->connections[i].level;
+		} else if (synth->connections[i].type == ADD) {
+			*synth->connections[i].destination += *synth->connections[i].source*synth->connections[i].level;
+		} else if (synth->connections[i].type == MULTIPLY) {
+			*synth->connections[i].destination *= *synth->connections[i].source*synth->connections[i].level;
 		}
 	}
 

@@ -3,8 +3,10 @@
 #include "SDL.h"
 #include "synth.h"
 
+// The number of samples played per second.
 const float sampleRate = 48000.0f;
 
+// SDL callback to play the synth.
 static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
 	uint16_t *output = (uint16_t*)stream;
@@ -22,11 +24,15 @@ int main(void) {
 
 	Synth synth = {
 		.level = 4000.0f,
-		.operators = {
-			{.type = SINE, .pitch = 440.0f, .amplitude = 1.0f, .offset = 1.0f, .pulseWidth = 0.5},
+		.oscillators = {
+			{.type = SINE, .pitch = 440.0f, .amplitude = 1.0f, .offset = 0.0f, .pulseWidth = 0.5},
+			{.type = SINE, .pitch = 220.0f, .amplitude = 1.0f, .offset = 0.0f, .pulseWidth = 0.5},
+			{.type = SINE, .pitch = 440.0f, .amplitude = 1.0f, .offset = 0.0f, .pulseWidth = 0.5},
 		},
-		.patches = {
-			{.source = &synth.operators[0].output, .destination = &synth.output, .level = 1.0f, .modulate = true},
+		.connections = {
+			{.source = &synth.oscillators[0].output, .destination = &synth.output, .level = 1.0f, .type = ADD},
+			{.source = &synth.oscillators[1].output, .destination = &synth.output, .level = 1.0f, .type = MULTIPLY},
+			{.source = &synth.oscillators[2].output, .destination = &synth.oscillators[0].phase, .level = 1.0f, .type = SET},
 		},
 	};
 
