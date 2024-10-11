@@ -41,7 +41,7 @@ typedef struct Voice {
 typedef struct Synth {
 	Voice voices[voiceCount];
 	size_t nextVoice;
-	bool patches[operatorCount][operatorCount + 1];
+	bool patches[operatorCount][operatorCount];
 	float level;
 	float intensity;
 	float carrierAttack;
