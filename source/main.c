@@ -32,11 +32,11 @@ int main(void) {
 			.frequency = 440.0f,
 			.operators = {
 				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
-				{.index = 1.0f, .level = 1.0f, .attack = 0.5f, .sustain = 10.0f, .release = 0.1f},
+				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 10.0f, .release = 0.1f},
 			}
 		}},
 
-		.patchCount = 2,
+		.patchCount = 3,
 		.patches = {
 			{.source = 0, .destination = 100, .level = 1.0f},
 			{.source = 1, .destination = 0, .level = 1.0f, .type = FM},
