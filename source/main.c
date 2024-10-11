@@ -24,7 +24,7 @@ int main(void) {
 
 	Synth synth = {
 		.level = 1000.0f,
-		.intensity = 1.0f,
+		.modulation = 1.0f,
 		.voices = {{
 			.frequency = 440.0f,
 			.operators = {

@@ -30,7 +30,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 		for (size_t j = 0; j < operatorCount; ++j) {
 			// Compute the sine wave and the output of the envelope.
 			Operator *operator = voice->operators + j;
-			operator->output = getEnvelopeLevel(operator, sampleRate)*operator->level*sinf(operator->oscillatorT + synth->intensity*operator->input + operator->feedback*operator->output);
+			operator->output = getEnvelopeLevel(operator, sampleRate)*operator->level*sinf(operator->oscillatorT + synth->modulation*operator->input + operator->feedback*operator->output);
 
 			// Update the oscillator's t.
 			float period = sampleRate/operator->index/voice->frequency;
@@ -52,7 +52,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 			for (size_t k = 0; k < operatorCount; ++k) {
 				if (synth->patches[j][k]) {
 					Operator *destination = voice->operators + k;
-					destination->input += source->output;
+					destination->input += synth->modulation*source->output;
 				}
 			}
 

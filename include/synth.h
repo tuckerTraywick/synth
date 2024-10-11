@@ -36,13 +36,7 @@ typedef struct Synth {
 	size_t nextVoice;
 	bool patches[operatorCount][operatorCount + 1];
 	float level;
-	float intensity;
-	float carrierAttack;
-	float carrierDecay;
-	float modulatorAttack;
-	float modulatorDecay;
-	float lfoRate;
-	float lfoDepth;
+	float modulation;
 	float output;
 } Synth;
 
