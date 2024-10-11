@@ -23,17 +23,13 @@ int main(void) {
 	}
 
 	Synth synth = {
-		.level = 4000.0f,
-		.oscillators = {
-			{.type = SINE, .pitch = 440.0f, .amplitude = 1.0f, .offset = 0.0f, .pulseWidth = 0.5},
-			{.type = SINE, .pitch = 220.0f, .amplitude = 1.0f, .offset = 0.0f, .pulseWidth = 0.5},
-			{.type = SINE, .pitch = 440.0f, .amplitude = 1.0f, .offset = 0.0f, .pulseWidth = 0.5},
-		},
-		.connections = {
-			{.source = &synth.oscillators[0].output, .destination = &synth.output, .level = 1.0f, .type = ADD},
-			{.source = &synth.oscillators[1].output, .destination = &synth.output, .level = 1.0f, .type = MULTIPLY},
-			{.source = &synth.oscillators[2].output, .destination = &synth.oscillators[0].phase, .level = 1.0f, .type = SET},
-		},
+		.level = 1000.0f,
+		.voices = {{
+			.frequency = 440.0f,
+			.operators = {
+				{.type = CARRIER, .index = 1.0f, .level = 1.0f},
+			}
+		}},
 	};
 
 	// Open an audio device.

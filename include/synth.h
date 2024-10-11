@@ -1,71 +1,62 @@
 #ifndef SYNTH_H
 #define SYNTH_H
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-// How many oscillators the synth has.
-static const size_t oscillatorCount = 10;
+// The number of operators.
+static const size_t operatorCount = 6;
 
-// How many connections between components can be made.
-static const size_t connectionCount = 20;
+// The number of notes that can be played at once.
+static const size_t voiceCount = 12;
 
-// The type of wave an oscillator produces.
-typedef enum WaveType {
-	OFF,
-	SINE,
-	SQUARE,
-	TRIANGLE,
-	SAWTOOTH,
-	REVERSE_SAWTOOTH,
-} WaveType;
+typedef enum OperatorType {
+	MODULATOR,
+	CARRIER,
+	LFO,
+} OperatorType;
 
-// Produces wave.
-typedef struct Oscillator {
-	WaveType type;
-	float amplitude;
-	float pitch;
-	float phase;
-	float offset;
-	float pulseWidth; // Only used by square waves.
-	float t; // [0, 2pi] regardless of wave type.
-	float output;
-} Oscillator;
-
-// Produces an ADSR envelope.
-typedef struct Envelope {
+// Produces a wave and follows an envelope.
+typedef struct Operator {
+	OperatorType type;
+	float index;
+	float level;
+	float feedback;
 	float attack;
-	float decay;
 	float sustain;
+	float decay;
 	float release;
-	float t; // [0, 1].
-	float output; // [0, 1].
-} Envelope;
+	float input;
+	float output;
+	float t; // [0, 2pi].
+} Operator;
 
-// The way a connection interacts with the desintaion.
-typedef enum ConnectionType {
-	SET, // Overwrite the destination with the source.
-	ADD, // Add the source to the desintation.
-	MULTIPLY, // Multiply the destination by the source.
-} ConnectionType;
+typedef struct Voice {
+	Operator operators[operatorCount];
+	float frequency;
+	float output;
+} Voice;
 
-// A connection between two parts of the synth.
-typedef struct Connection {
-	ConnectionType type;
-	float *source;
-	float *destination;
-	float level;
-} Connection;
-
-// A collection of oscillators and connections.
 typedef struct Synth {
-	Oscillator oscillators[oscillatorCount];
-	Connection connections[connectionCount];
+	Voice voices[voiceCount];
+	size_t nextVoice;
+	bool patches[operatorCount][operatorCount + 1];
 	float level;
+	float intensity;
+	float carrierAttack;
+	float carrierDecay;
+	float modulatorAttack;
+	float modulatorDecay;
+	float lfoRate;
+	float lfoDepth;
 	float output;
 } Synth;
 
-// Steps each part of the synth forward one tick and returns the output.
 float stepSynth(Synth *synth, float sampleRate);
+
+void beginNote(Synth *synth, float frequency);
+
+void endNote(Synth *synth, float frequency);
 
 #endif // SYNTH_H
