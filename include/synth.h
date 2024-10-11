@@ -11,15 +11,8 @@ static const size_t operatorCount = 6;
 // The number of notes that can be played at once.
 static const size_t voiceCount = 12;
 
-typedef enum OperatorType {
-	MODULATOR,
-	CARRIER,
-	LFO,
-} OperatorType;
-
 // Produces a wave and follows an envelope.
 typedef struct Operator {
-	OperatorType type;
 	float index;
 	float level;
 	float feedback;
@@ -41,7 +34,7 @@ typedef struct Voice {
 typedef struct Synth {
 	Voice voices[voiceCount];
 	size_t nextVoice;
-	bool patches[operatorCount][operatorCount];
+	bool patches[operatorCount][operatorCount + 1];
 	float level;
 	float intensity;
 	float carrierAttack;

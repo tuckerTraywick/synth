@@ -28,12 +28,13 @@ int main(void) {
 		.voices = {{
 			.frequency = 440.0f,
 			.operators = {
-				{.type = CARRIER, .index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 2.0f},
-				// {.type = MODULATOR, .index = 1.0f, .level = 1.0f},
+				{.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 2.0f},
+				{.index = 1.0f, .level = 4.0f, .attack = 0.1f, .sustain = 1.0f, .release = 2.0f},
 			}
 		}},
 		.patches = {
-			// [1][0] = true,
+			[0][operatorCount] = true,
+			[1][0] = true,
 		},
 	};
 

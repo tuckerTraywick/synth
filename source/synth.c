@@ -39,11 +39,6 @@ float stepSynth(Synth *synth, float sampleRate) {
 			if (operator->oscillatorT > 2.0f*M_PI) {
 				operator->oscillatorT -= 2.0f*M_PI;
 			}
-
-			// Route the output of the operator.
-			if (operator->type == CARRIER) {
-				voice->output += operator->output;
-			}
 		}
 
 		// Zero the operators' inputs.
@@ -51,14 +46,18 @@ float stepSynth(Synth *synth, float sampleRate) {
 			voice->operators[j].input = 0.0f;
 		}
 		
-		// Route the output of the modulators.
+		// Route the output of the operators.
 		for (size_t j = 0; j < operatorCount; ++j) {
 			Operator *source = voice->operators + j;
 			for (size_t k = 0; k < operatorCount; ++k) {
-				if (synth->patches[j][k] && (source->type == MODULATOR || source->type == LFO)) {
+				if (synth->patches[j][k]) {
 					Operator *destination = voice->operators + k;
 					destination->input += source->output;
 				}
+			}
+
+			if (synth->patches[j][operatorCount]) {
+				voice->output += source->output;
 			}
 		}
 
