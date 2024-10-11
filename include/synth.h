@@ -30,7 +30,7 @@ typedef struct Operator {
 
 typedef struct Voice {
 	Operator operators[operatorCount];
-	bool active; // Whether the note is being held.
+	bool held; // Whether the note is being held.
 	float frequency;
 	float output;
 } Voice;

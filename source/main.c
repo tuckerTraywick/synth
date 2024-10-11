@@ -26,19 +26,21 @@ int main(void) {
 		.level = 1000.0f,
 		.modulation = 1.0f,
 
-		.operatorCount = 1,
+		.operatorCount = 2,
 		.voices = {{
+			.held = true,
 			.frequency = 440.0f,
 			.operators = {
-				{.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 4.0f},
-				// {.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 3.0f},
+				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
+				{.index = 1.0f, .level = 1.0f, .attack = 0.5f, .sustain = 10.0f, .release = 0.1f},
 			}
 		}},
 
-		.patchCount = 1,
+		.patchCount = 2,
 		.patches = {
 			{.source = 0, .destination = 100, .level = 1.0f},
-			// {.source = 1, .destination = 0, .level = 1.0f, .type = AM},
+			{.source = 1, .destination = 0, .level = 1.0f, .type = FM},
+			{.source = 1, .destination = 0, .level = 1.0f, .type = AM},
 		},
 	};
 

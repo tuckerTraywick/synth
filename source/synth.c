@@ -5,11 +5,13 @@
 
 #include <stdio.h>
 
-static float getEnvelopeLevel(Operator *operator, float sampleRate) {
+static float getEnvelopeLevel(Operator *operator, float sampleRate, bool held) {
 	float envelopeLength = operator->attack + operator->release;
 	float output = 0.0f;
 	if (operator->envelopeT <= operator->attack) {
 		output = operator->sustain/operator->attack*operator->envelopeT;
+	} else if (held) {
+		return operator->sustain;
 	} else {
 		output = operator->sustain - operator->sustain/operator->release*(operator->envelopeT - operator->attack);
 	}
@@ -34,7 +36,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 		for (size_t j = 0; j < synth->operatorCount; ++j) {
 			// Compute the sine wave and the output of the envelope.
 			Operator *operator = voice->operators + j;
-			operator->output = getEnvelopeLevel(operator, sampleRate)*(operator->level + synth->modulation*operator->am)*sinf(operator->oscillatorT + synth->modulation*operator->fm);
+			operator->output = getEnvelopeLevel(operator, sampleRate, voice->held)*(operator->level + synth->modulation*operator->am)*sinf(operator->oscillatorT + synth->modulation*operator->fm);
 
 			// Update the oscillator's t.
 			float period = sampleRate/operator->index/voice->frequency;
