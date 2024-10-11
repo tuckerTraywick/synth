@@ -8,7 +8,7 @@
 static float getEnvelopeLevel(Operator *operator, float sampleRate) {
 	float envelopeLength = operator->attack + operator->release;
 	float output = 0.0f;
-	if (operator->envelopeT < operator->attack) {
+	if (operator->envelopeT <= operator->attack) {
 		output = operator->sustain/operator->attack*operator->envelopeT;
 	} else {
 		output = operator->sustain - operator->sustain/operator->release*(operator->envelopeT - operator->attack);
@@ -17,7 +17,7 @@ static float getEnvelopeLevel(Operator *operator, float sampleRate) {
 	if (operator->envelopeT < envelopeLength) {
 		operator->envelopeT += 1.0/sampleRate;
 	}
-	return 1.0f; // output;
+	return output;
 }
 
 float stepSynth(Synth *synth, float sampleRate) {
@@ -26,11 +26,15 @@ float stepSynth(Synth *synth, float sampleRate) {
 		Voice *voice = synth->voices + i;
 		voice->output = 0.0f;
 
+		if (voice->frequency == 0.0f) {
+			continue;
+		}
+
 		// Calculate the output of each operator.
-		for (size_t j = 0; j < operatorCount; ++j) {
+		for (size_t j = 0; j < synth->operatorCount; ++j) {
 			// Compute the sine wave and the output of the envelope.
 			Operator *operator = voice->operators + j;
-			operator->output = getEnvelopeLevel(operator, sampleRate)*(operator->level + operator->am)*sinf(operator->oscillatorT + synth->modulation*operator->fm);
+			operator->output = getEnvelopeLevel(operator, sampleRate)*(operator->level + synth->modulation*operator->am)*sinf(operator->oscillatorT + synth->modulation*operator->fm);
 
 			// Update the oscillator's t.
 			float period = sampleRate/operator->index/voice->frequency;
@@ -42,13 +46,13 @@ float stepSynth(Synth *synth, float sampleRate) {
 		}
 
 		// Zero the operators' inputs.
-		for (size_t j = 0; j < operatorCount; ++j) {
+		for (size_t j = 0; j < synth->operatorCount; ++j) {
 			voice->operators[j].fm = 0.0f;
 			voice->operators[j].am = 0.0f;
 		}
 		
 		// Route the output of the operators.
-		for (size_t j = 0; j < patchCount; ++j) {
+		for (size_t j = 0; j < synth->patchCount; ++j) {
 			Connection *patch = synth->patches + j;
 			if (patch->level == 0) {
 				continue;

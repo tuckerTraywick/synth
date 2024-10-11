@@ -6,13 +6,13 @@
 #include <stddef.h>
 
 // The number of operators.
-static const size_t operatorCount = 6;
+static const size_t operatorCount = 10;
 
 // The number of notes that can be played at once.
-static const size_t voiceCount = 12;
+static const size_t voiceCount = 10;
 
 // The number of patches between operators that can be made.
-static const size_t patchCount = 12;
+static const size_t patchCount = 20;
 
 // Produces a wave and follows an envelope.
 typedef struct Operator {
@@ -51,6 +51,8 @@ typedef struct Synth {
 	Voice voices[voiceCount];
 	size_t nextVoice;
 	Connection patches[patchCount];
+	size_t patchCount;
+	size_t operatorCount;
 	float level;
 	float modulation;
 	float output;

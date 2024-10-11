@@ -25,16 +25,20 @@ int main(void) {
 	Synth synth = {
 		.level = 1000.0f,
 		.modulation = 1.0f,
+
+		.operatorCount = 1,
 		.voices = {{
 			.frequency = 440.0f,
 			.operators = {
-				{.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 2.0f},
-				{.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 2.0f},
+				{.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 4.0f},
+				// {.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 3.0f},
 			}
 		}},
+
+		.patchCount = 1,
 		.patches = {
 			{.source = 0, .destination = 100, .level = 1.0f},
-			{.source = 1, .destination = 0, .level = 1.0f, .type = AM},
+			// {.source = 1, .destination = 0, .level = 1.0f, .type = AM},
 		},
 	};
 
