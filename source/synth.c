@@ -10,14 +10,14 @@ static float getEnvelopeLevel(Operator *operator, float sampleRate) {
 	float output = 0.0f;
 	if (operator->envelopeT < operator->attack) {
 		output = operator->sustain/operator->attack*operator->envelopeT;
-	} else if (operator->envelopeT < operator->attack + operator->release) {
+	} else {
 		output = operator->sustain - operator->sustain/operator->release*(operator->envelopeT - operator->attack);
 	}
 
 	if (operator->envelopeT < envelopeLength) {
 		operator->envelopeT += 1.0/sampleRate;
 	}
-	return output;
+	return 1.0f; // output;
 }
 
 float stepSynth(Synth *synth, float sampleRate) {
@@ -30,7 +30,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 		for (size_t j = 0; j < operatorCount; ++j) {
 			// Compute the sine wave and the output of the envelope.
 			Operator *operator = voice->operators + j;
-			operator->output = getEnvelopeLevel(operator, sampleRate)*operator->level*sinf(operator->oscillatorT + synth->modulation*operator->input + operator->feedback*operator->output);
+			operator->output = getEnvelopeLevel(operator, sampleRate)*(operator->level + operator->am)*sinf(operator->oscillatorT + synth->modulation*operator->fm);
 
 			// Update the oscillator's t.
 			float period = sampleRate/operator->index/voice->frequency;
@@ -43,21 +43,28 @@ float stepSynth(Synth *synth, float sampleRate) {
 
 		// Zero the operators' inputs.
 		for (size_t j = 0; j < operatorCount; ++j) {
-			voice->operators[j].input = 0.0f;
+			voice->operators[j].fm = 0.0f;
+			voice->operators[j].am = 0.0f;
 		}
 		
 		// Route the output of the operators.
-		for (size_t j = 0; j < operatorCount; ++j) {
-			Operator *source = voice->operators + j;
-			for (size_t k = 0; k < operatorCount; ++k) {
-				if (synth->patches[j][k]) {
-					Operator *destination = voice->operators + k;
-					destination->input += synth->modulation*source->output;
-				}
+		for (size_t j = 0; j < patchCount; ++j) {
+			Connection *patch = synth->patches + j;
+			if (patch->level == 0) {
+				continue;
+			}
+			
+			Operator *source = voice->operators + patch->source;
+			if (patch->destination >= operatorCount) {
+				voice->output += patch->level*source->output;
+				continue;
 			}
 
-			if (synth->patches[j][operatorCount]) {
-				voice->output += source->output;
+			Operator *destination = voice->operators + patch->destination;
+			if (patch->type == FM) {
+				destination->fm = patch->level*source->output;
+			} else {
+				destination->am = patch->level*source->output;
 			}
 		}
 

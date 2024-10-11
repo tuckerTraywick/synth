@@ -29,12 +29,12 @@ int main(void) {
 			.frequency = 440.0f,
 			.operators = {
 				{.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 2.0f},
-				{.index = 1.0f, .level = 4.0f, .attack = 0.1f, .sustain = 1.0f, .release = 2.0f},
+				{.index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 2.0f},
 			}
 		}},
 		.patches = {
-			[0][operatorCount] = true,
-			[1][0] = true,
+			{.source = 0, .destination = 100, .level = 1.0f},
+			{.source = 1, .destination = 0, .level = 1.0f, .type = AM},
 		},
 	};
 
