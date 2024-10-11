@@ -25,11 +25,11 @@ typedef struct Operator {
 	float feedback;
 	float attack;
 	float sustain;
-	float decay;
 	float release;
 	float input;
 	float output;
-	float t; // [0, 2pi].
+	float oscillatorT; // [0, 2pi].
+	float envelopeT; // [0, inf] in seconds.
 } Operator;
 
 typedef struct Voice {

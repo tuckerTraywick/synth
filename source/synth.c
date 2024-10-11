@@ -5,6 +5,21 @@
 
 #include <stdio.h>
 
+static float getEnvelopeLevel(Operator *operator, float sampleRate) {
+	float envelopeLength = operator->attack + operator->release;
+	float output = 0.0f;
+	if (operator->envelopeT < operator->attack) {
+		output = operator->sustain/operator->attack*operator->envelopeT;
+	} else if (operator->envelopeT < operator->attack + operator->release) {
+		output = operator->sustain - operator->sustain/operator->release*(operator->envelopeT - operator->attack);
+	}
+
+	if (operator->envelopeT < envelopeLength) {
+		operator->envelopeT += 1.0/sampleRate;
+	}
+	return output;
+}
+
 float stepSynth(Synth *synth, float sampleRate) {
 	synth->output = 0.0f;
 	for (size_t i = 0; i < voiceCount; ++i) {
@@ -13,21 +28,21 @@ float stepSynth(Synth *synth, float sampleRate) {
 
 		// Calculate the output of each operator.
 		for (size_t j = 0; j < operatorCount; ++j) {
-			// Compute the sine wave.
+			// Compute the sine wave and the output of the envelope.
 			Operator *operator = voice->operators + j;
-			operator->output = sinf(operator->t + operator->input + operator->feedback*operator->output);
-			
-			// Update t.
+			operator->output = getEnvelopeLevel(operator, sampleRate)*operator->level*sinf(operator->oscillatorT + synth->intensity*operator->input + operator->feedback*operator->output);
+
+			// Update the oscillator's t.
 			float period = sampleRate/operator->index/voice->frequency;
 			float increment = 2.0f*M_PI/period;
-			operator->t += increment;
-			if (operator->t > 2.0f*M_PI) {
-				operator->t -= 2.0f*M_PI;
+			operator->oscillatorT += increment;
+			if (operator->oscillatorT > 2.0f*M_PI) {
+				operator->oscillatorT -= 2.0f*M_PI;
 			}
 
 			// Route the output of the operator.
 			if (operator->type == CARRIER) {
-				voice->output += operator->level*operator->output;
+				voice->output += operator->output;
 			}
 		}
 

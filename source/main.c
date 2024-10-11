@@ -24,15 +24,16 @@ int main(void) {
 
 	Synth synth = {
 		.level = 1000.0f,
+		.intensity = 1.0f,
 		.voices = {{
 			.frequency = 440.0f,
 			.operators = {
-				{.type = CARRIER, .index = 1.0f, .level = 1.0f, .feedback = 1.0f},
-				{.type = MODULATOR, .index = 1.0f, .level = 1.0f},
+				{.type = CARRIER, .index = 1.0f, .level = 1.0f, .attack = 4.0f, .sustain = 1.0f, .release = 2.0f},
+				// {.type = MODULATOR, .index = 1.0f, .level = 1.0f},
 			}
 		}},
 		.patches = {
-			[1][0] = true,
+			// [1][0] = true,
 		},
 	};
 
