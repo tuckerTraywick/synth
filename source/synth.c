@@ -21,12 +21,12 @@ float stepSynth(Synth *synth, float sampleRate) {
 			if (voice->held) {
 				// Attack phase.
 				if (envelope->t < envelope->attack) {
-					envelope->output += 1.0f/envelope->attack/sampleRate;
+					envelope->output += envelope->level/envelope->attack/sampleRate;
 					envelope->t += 1.0f/sampleRate;
 				// Decay phase.
 				} else if (envelope->t < envelope->attack + envelope->decay) {
 					if (envelope->decay != 0.0f) {
-						envelope->output -= (1.0f - envelope->sustain)/envelope->decay/sampleRate;
+						envelope->output -= (envelope->level - envelope->sustain)/envelope->decay/sampleRate;
 					}
 					envelope->t += 1.0f/sampleRate;
 				// Sustain phase.
@@ -36,7 +36,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 			} else if (envelope->t != 0.0f) {
 				// If the note was just released, move t to the release phase.
 				if (envelope->t < envelope->attack + envelope->decay) {
-					envelope->output = envelope->sustain;
+					// envelope->output = envelope->sustain;
 					envelope->t = envelope->attack + envelope->decay;
 				// If the output hasn't reached zero, continue releasing.
 				} else if (envelope->output > 0.0f) {
@@ -112,6 +112,17 @@ float stepSynth(Synth *synth, float sampleRate) {
 					Envelope *envelope = voice->envelopes + j;
 					Oscillator *oscillator = voice->oscillators + k;
 					oscillator->level = synth->envelopeAmPatches[j][k]*envelope->output;
+				}
+			}
+		}
+
+		// Do envelope frequency modulation.
+		for (size_t j = 0; j < synth->envelopeCount; ++j) {
+			for (size_t k = 0; k < synth->oscillatorCount; ++k) {
+				if (synth->envelopeFmPatches[j][k] != 0.0f) {
+					Envelope *envelope = voice->envelopes + j;
+					Oscillator *oscillator = voice->oscillators + k;
+					oscillator->fm += synth->envelopeFmPatches[j][k]*envelope->output;
 				}
 			}
 		}

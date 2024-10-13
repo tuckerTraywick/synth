@@ -26,6 +26,7 @@ typedef struct Oscillator {
 } Oscillator;
 
 typedef struct Envelope {
+	float level;
 	float attack;
 	float decay;
 	float sustain;
