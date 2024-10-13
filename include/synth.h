@@ -18,9 +18,9 @@ static const size_t voiceCount = 10;
 typedef struct Oscillator {
 	float level;
 	float index;
-	float offset;
 	float fm;
 	float am;
+	float frequencyOffset;
 	float output;
 	float t; // [0, 2pi].
 } Oscillator;

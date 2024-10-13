@@ -57,7 +57,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 			operator->output = (operator->level + synth->modulation*operator->am)*sinf(operator->t + synth->modulation*operator->fm);
 
 			// Update the oscillator's t.
-			float period = sampleRate/operator->index/voice->frequency;
+			float period = sampleRate/operator->index/(voice->frequency + operator->frequencyOffset);
 			float increment = 2.0f*M_PI/period;
 			operator->t += increment;
 			if (operator->t > 2.0f*M_PI) {
@@ -69,6 +69,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 		for (size_t j = 0; j < synth->oscillatorCount; ++j) {
 			voice->oscillators[j].fm = 0.0f;
 			voice->oscillators[j].am = 0.0f;
+			voice->oscillators[j].frequencyOffset = 0.0f;
 		}
 		
 		// Do oscillator frequency modulation.
@@ -122,7 +123,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 				if (synth->envelopeFmPatches[j][k] != 0.0f) {
 					Envelope *envelope = voice->envelopes + j;
 					Oscillator *oscillator = voice->oscillators + k;
-					oscillator->fm += synth->envelopeFmPatches[j][k]*envelope->output;
+					oscillator->frequencyOffset += synth->envelopeFmPatches[j][k]*envelope->output;
 				}
 			}
 		}

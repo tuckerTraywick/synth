@@ -39,15 +39,15 @@ int main(void) {
 				{.index = 1.0f, .level = 1.0f},
 			},
 			.envelopes = {
-				{.level = 1.0f, .attack = 3.0f, .decay = 1.0f, .sustain = 1.0f, .release = 3.0f},
+				{.level = 1.0f, .attack = 1.0f, .decay = 1.0f, .sustain = 1.0f, .release = 1.0f},
 			},
 		}},
 
 		.fmPatches = {
 			[0][oscillatorCount] = 1.0f,
 		},
-		.envelopeAmPatches = {
-			[0][0] = 1.0f,
+		.envelopeFmPatches = {
+			[0][0] = 100.0f,
 		},
 	};
 
