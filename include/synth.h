@@ -11,13 +11,11 @@ static const size_t operatorCount = 10;
 // The number of notes that can be played at once.
 static const size_t voiceCount = 10;
 
-// The number of patches between operators that can be made.
-static const size_t patchCount = 20;
-
 // Produces a wave and follows an envelope.
 typedef struct Operator {
-	float index;
 	float level;
+	float index;
+	float offset;
 	float attack;
 	float sustain;
 	float release;
@@ -35,22 +33,11 @@ typedef struct Voice {
 	float output;
 } Voice;
 
-typedef enum ConnectionType {
-	FM,
-	AM,
-} ConnectionType;
-
-typedef struct Connection {
-	size_t source;
-	size_t destination;
-	float level;
-	ConnectionType type;
-} Connection;
-
 typedef struct Synth {
 	Voice voices[voiceCount];
 	size_t nextVoice;
-	Connection patches[patchCount];
+	float fmPatches[operatorCount][operatorCount + 1];
+	float amPatches[operatorCount][operatorCount + 1];
 	size_t patchCount;
 	size_t operatorCount;
 	float level;

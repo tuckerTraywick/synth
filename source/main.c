@@ -26,22 +26,23 @@ int main(void) {
 		.level = 1000.0f,
 		.modulation = 1.0f,
 
-		.operatorCount = 2,
+		.operatorCount = 4,
 		.voices = {{
 			.held = true,
-			.frequency = 440.0f,
+			.frequency = 220.0f,
 			.operators = {
 				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
-				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 10.0f, .release = 0.1f},
+				{.index = 0.5f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
+				{.index = 0.5f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
+				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
 			}
 		}},
 
-		.patchCount = 3,
-		.patches = {
-			{.source = 0, .destination = 100, .level = 1.0f},
-			{.source = 1, .destination = 0, .level = 1.0f, .type = FM},
-			{.source = 1, .destination = 0, .level = 1.0f, .type = AM},
-		},
+		.fmPatches = {
+			[0][operatorCount] = 1.0f,
+			[1][1] = 1.0f,
+			[1][0] = 10.0f,
+		}
 	};
 
 	// Open an audio device.
@@ -62,6 +63,8 @@ int main(void) {
 
 	// Begin playback.
 	SDL_PauseAudioDevice(playbackDevice, 0);
+
+	// DO SYNTH UPDATE IN GUI LOOP INSTEAD OF CALLBACK SO CONTROLS RESPOND IMMEDIATELY.
 
 	// Wait to quit.
 	printf("Press enter to stop.\n");
