@@ -5,23 +5,6 @@
 
 #include <stdio.h>
 
-// static float getEnvelopeLevel(Operator *operator, float sampleRate, bool held) {
-// 	float envelopeLength = operator->attack + operator->release;
-// 	float output = 0.0f;
-// 	if (operator->envelopeT <= operator->attack) {
-// 		output = operator->sustain/operator->attack*operator->envelopeT;
-// 	} else if (held) {
-// 		return operator->sustain;
-// 	} else {
-// 		output = operator->sustain - operator->sustain/operator->release*(operator->envelopeT - operator->attack);
-// 	}
-
-// 	if (operator->envelopeT < envelopeLength) {
-// 		operator->envelopeT += 1.0/sampleRate;
-// 	}
-// 	return output;
-// }
-
 float stepSynth(Synth *synth, float sampleRate) {
 	synth->output = 0.0f;
 	for (size_t i = 0; i < voiceCount; ++i) {
@@ -32,62 +15,108 @@ float stepSynth(Synth *synth, float sampleRate) {
 			continue;
 		}
 
-		// Calculate the output of each operator.
-		for (size_t j = 0; j < synth->operatorCount; ++j) {
+		// Step the envelopes.
+		for (size_t j = 0; j < synth->envelopeCount; ++j) {
+			Envelope *envelope = voice->envelopes + j;
+			if (voice->held) {
+				// Attack phase.
+				if (envelope->t < envelope->attack) {
+					envelope->output += 1.0f/envelope->attack/sampleRate;
+					envelope->t += 1.0f/sampleRate;
+				// Decay phase.
+				} else if (envelope->t < envelope->attack + envelope->decay) {
+					if (envelope->decay != 0.0f) {
+						envelope->output -= (1.0f - envelope->sustain)/envelope->decay/sampleRate;
+					}
+					envelope->t += 1.0f/sampleRate;
+				// Sustain phase.
+				} else {
+					envelope->output = envelope->sustain;
+				}
+			} else if (envelope->t != 0.0f) {
+				// If the note was just released, move t to the release phase.
+				if (envelope->t < envelope->attack + envelope->decay) {
+					envelope->output = envelope->sustain;
+					envelope->t = envelope->attack + envelope->decay;
+				// If the output hasn't reached zero, continue releasing.
+				} else if (envelope->output > 0.0f) {
+					envelope->output -= envelope->sustain/envelope->release/sampleRate;
+					envelope->t += 1.0f/sampleRate;
+				// Else, the envelope is done so reset it.
+				} else {
+					envelope->output = 0.0f;
+					envelope->t = 0.0f;
+				}
+			}
+		}
+
+		// Step the oscillators.
+		for (size_t j = 0; j < synth->oscillatorCount; ++j) {
 			// Compute the sine wave and the output of the envelope.
-			Operator *operator = voice->operators + j;
-			operator->output = (operator->level + synth->modulation*operator->am)*sinf(operator->oscillatorT + synth->modulation*operator->fm);
+			Oscillator *operator = voice->oscillators + j;
+			operator->output = (operator->level + synth->modulation*operator->am)*sinf(operator->t + synth->modulation*operator->fm);
 
 			// Update the oscillator's t.
 			float period = sampleRate/operator->index/voice->frequency;
 			float increment = 2.0f*M_PI/period;
-			operator->oscillatorT += increment;
-			if (operator->oscillatorT > 2.0f*M_PI) {
-				operator->oscillatorT -= 2.0f*M_PI;
+			operator->t += increment;
+			if (operator->t > 2.0f*M_PI) {
+				operator->t -= 2.0f*M_PI;
 			}
 		}
 
-		// Zero the operators' inputs.
-		for (size_t j = 0; j < synth->operatorCount; ++j) {
-			voice->operators[j].fm = 0.0f;
-			voice->operators[j].am = 0.0f;
+		// Zero the oscillators' inputs.
+		for (size_t j = 0; j < synth->oscillatorCount; ++j) {
+			voice->oscillators[j].fm = 0.0f;
+			voice->oscillators[j].am = 0.0f;
 		}
 		
-		// Do frequency modulation.
-		for (size_t j = 0; j < synth->operatorCount; ++j) {
-			for (size_t k = 0; k < synth->operatorCount; ++k) {
+		// Do oscillator frequency modulation.
+		for (size_t j = 0; j < synth->oscillatorCount; ++j) {
+			for (size_t k = 0; k < synth->oscillatorCount; ++k) {
 				if (synth->fmPatches[j][k] != 0.0f) {
-					Operator *source = voice->operators + j;
-					Operator *destination = voice->operators + k;
+					Oscillator *source = voice->oscillators + j;
+					Oscillator *destination = voice->oscillators + k;
 					destination->fm += synth->fmPatches[j][k]*source->output;
 				}
 			}
 		}
-		for (size_t j = 0; j < synth->operatorCount; ++j) {
-			if (synth->fmPatches[j][operatorCount] != 0.0f) {
-				Operator *source = voice->operators + j;
+		for (size_t j = 0; j < synth->oscillatorCount; ++j) {
+			if (synth->fmPatches[j][oscillatorCount] != 0.0f) {
+				Oscillator *source = voice->oscillators + j;
 				voice->output += source->output;
 			}
 		}
 
-		// Do amplitude modulation.
-		for (size_t j = 0; j < synth->operatorCount; ++j) {
-			for (size_t k = 0; k < synth->operatorCount; ++k) {
+		// Do oscillator amplitude modulation.
+		for (size_t j = 0; j < synth->oscillatorCount; ++j) {
+			for (size_t k = 0; k < synth->oscillatorCount; ++k) {
 				if (synth->amPatches[j][k] != 0.0f) {
-					Operator *source = voice->operators + j;
-					Operator *destination = voice->operators + k;
+					Oscillator *source = voice->oscillators + j;
+					Oscillator *destination = voice->oscillators + k;
 					destination->am += synth->amPatches[j][k]*source->output;
 				}
 			}
 		}
-		for (size_t j = 0; j < synth->operatorCount; ++j) {
-			if (synth->amPatches[j][operatorCount] != 0.0f) {
-				Operator *source = voice->operators + j;
-				voice->output += synth->amPatches[j][operatorCount]*source->output;
+		for (size_t j = 0; j < synth->oscillatorCount; ++j) {
+			if (synth->amPatches[j][oscillatorCount] != 0.0f) {
+				Oscillator *source = voice->oscillators + j;
+				voice->output += synth->amPatches[j][oscillatorCount]*source->output;
+			}
+		}
+
+		// Do envelope amplitude modulation.
+		for (size_t j = 0; j < synth->envelopeCount; ++j) {
+			for (size_t k = 0; k < synth->oscillatorCount; ++k) {
+				if (synth->envelopeAmPatches[j][k] != 0.0f) {
+					Envelope *envelope = voice->envelopes + j;
+					Oscillator *oscillator = voice->oscillators + k;
+					oscillator->level = synth->envelopeAmPatches[j][k]*envelope->output;
+				}
 			}
 		}
 
 		synth->output += voice->output;
 	}
-	return synth->level*synth->output;
+	return (synth->level*synth->output >= synth->level) ? synth->level : synth->level*synth->output;
 }

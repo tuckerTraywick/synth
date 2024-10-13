@@ -5,29 +5,38 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// The number of operators.
-static const size_t operatorCount = 10;
+// The number of oscillators.
+static const size_t oscillatorCount = 6;
+
+// The number of enveloeps.
+static const size_t envelopeCount = 8;
 
 // The number of notes that can be played at once.
 static const size_t voiceCount = 10;
 
 // Produces a wave and follows an envelope.
-typedef struct Operator {
+typedef struct Oscillator {
 	float level;
 	float index;
 	float offset;
-	float attack;
-	float sustain;
-	float release;
 	float fm;
 	float am;
 	float output;
-	float oscillatorT; // [0, 2pi].
-	float envelopeT; // [0, inf] in seconds.
-} Operator;
+	float t; // [0, 2pi].
+} Oscillator;
+
+typedef struct Envelope {
+	float attack;
+	float decay;
+	float sustain;
+	float release;
+	float output; // [0, 1].
+	float t;
+} Envelope;
 
 typedef struct Voice {
-	Operator operators[operatorCount];
+	Oscillator oscillators[oscillatorCount];
+	Envelope envelopes[envelopeCount];
 	bool held; // Whether the note is being held.
 	float frequency;
 	float output;
@@ -36,10 +45,12 @@ typedef struct Voice {
 typedef struct Synth {
 	Voice voices[voiceCount];
 	size_t nextVoice;
-	float fmPatches[operatorCount][operatorCount + 1];
-	float amPatches[operatorCount][operatorCount + 1];
-	size_t patchCount;
-	size_t operatorCount;
+	size_t oscillatorCount;
+	size_t envelopeCount;
+	float fmPatches[oscillatorCount][oscillatorCount + 1];
+	float amPatches[oscillatorCount][oscillatorCount + 1];
+	float envelopeAmPatches[envelopeCount][oscillatorCount + 1];
+	float envelopeFmPatches[envelopeCount][oscillatorCount + 1];
 	float level;
 	float modulation;
 	float output;

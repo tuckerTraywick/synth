@@ -23,26 +23,32 @@ int main(void) {
 	}
 
 	Synth synth = {
-		.level = 1000.0f,
+		.level = 2000.0f,
 		.modulation = 1.0f,
 
-		.operatorCount = 4,
+		.oscillatorCount = 4,
+		.envelopeCount = 1,
+
 		.voices = {{
 			.held = true,
-			.frequency = 220.0f,
-			.operators = {
-				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
-				{.index = 0.5f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
-				{.index = 0.5f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
-				{.index = 1.0f, .level = 1.0f, .attack = 0.1f, .sustain = 1.0f, .release = 0.1f},
-			}
+			.frequency = 440.0f,
+			.oscillators = {
+				{.index = 1.0f, .level = 1.0f},
+				{.index = 1.0f, .level = 1.0f},
+				{.index = 1.0f, .level = 1.0f},
+				{.index = 1.0f, .level = 1.0f},
+			},
+			.envelopes = {
+				{.attack = 1.0f, .decay = 1.0f, .sustain = 0.5f, .release = 1.0f},
+			},
 		}},
 
 		.fmPatches = {
-			[0][operatorCount] = 1.0f,
-			[1][1] = 1.0f,
-			[1][0] = 10.0f,
-		}
+			[0][oscillatorCount] = 1.0f,
+		},
+		.envelopeAmPatches = {
+			[0][0] = 1.0f,
+		},
 	};
 
 	// Open an audio device.
@@ -67,6 +73,10 @@ int main(void) {
 	// DO SYNTH UPDATE IN GUI LOOP INSTEAD OF CALLBACK SO CONTROLS RESPOND IMMEDIATELY.
 
 	// Wait to quit.
+	printf("Press enter to stop the note.\n");
+	getchar();
+	synth.voices[0].held = false;
+
 	printf("Press enter to stop.\n");
 	getchar();
 
