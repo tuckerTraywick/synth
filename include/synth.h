@@ -47,20 +47,17 @@ typedef struct Oscillator {
 	float t;
 } Oscillator;
 
-// typedef struct FilterParamters {
-// 	float leftCutoff;
-// 	float rightCutoff;
-// 	float resonance;
-// } FilterParamters;
+typedef struct FilterParamters {
+	float cutoff;
+	float resonance;
+} FilterParameters;
 
-// typedef struct Filter {
-// 	float input;
-// 	float leftCutoff;
-// 	float rightCutoff;
-// 	float resonance;
-// 	float previousInput;
-// 	float output;
-// } Filter;
+typedef struct Filter {
+	float input;
+	float cutoff;
+	float resonance;
+	float output;
+} Filter;
 
 typedef struct EnvelopeParameters {
 	float attack;
@@ -77,6 +74,7 @@ typedef struct Envelope {
 typedef enum PatchSourceType {
 	OSCILLATOR,
 	ENVELOPE,
+	FILTER,
 } PatchSourceType;
 
 typedef enum PatchDestinationType {
@@ -86,6 +84,8 @@ typedef enum PatchDestinationType {
 	OSCILLATOR_PHASE = offsetof(Oscillator, phase),
 	OSCILLATOR_OFFSET = offsetof(Oscillator, offset),
 	OSCILLATOR_PULSEWIDTH = offsetof(Oscillator, pulseWidth),
+	FILTER_INPUT = 200 + offsetof(Filter, input),
+	FILTER_CUTOFF = 200 + offsetof(Filter, cutoff),
 } PatchDestinationType;
 
 typedef struct Patch {
@@ -99,6 +99,7 @@ typedef struct Patch {
 typedef struct Voice {
 	Oscillator oscillators[synthSize];
 	Envelope envelopes[synthSize];
+	Filter filters[synthSize];
 	bool held; // Whether the note is being held.
 	float frequency;
 	float output;
@@ -109,6 +110,8 @@ typedef struct Synth {
 	size_t oscillatorCount;
 	EnvelopeParameters envelopeParameters[synthSize];
 	size_t envelopeCount;
+	FilterParameters filterParameters[synthSize];
+	size_t filterCount;
 	Patch patches[patchCount];
 	size_t patchCount;
 	Voice voices[voiceCount];

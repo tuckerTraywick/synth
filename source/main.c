@@ -25,7 +25,7 @@ int main(void) {
 		
 		.oscillatorParameters = {
 			{.type = SQUARE, .amplitude = 1.0f, .frequencyCoarse = 1.0f, .pulseWidth = 0.5f},
-			{.type = SINE, .amplitude = 0.5f, .frequencyCoarse = 0.0f, .frequencyFine = 0.1f, .pulseWidth = 0.5f},
+			{.type = TRIANGLE, .amplitude = 0.9f, .frequencyCoarse = 0.0f, .frequencyFine = 0.5f, .offset = 0.1f, .pulseWidth = 0.5f},
 		},
 		.oscillatorCount = 2,
 
@@ -33,12 +33,18 @@ int main(void) {
 			{.attack = 1.0f, .decay = 0.0f, .sustain = 1.0f, .release = 1.0f},
 		},
 		.envelopeCount = 1,
+
+		.filterParameters = {
+			{.cutoff = 0.0f},
+		},
+		.filterCount = 1,
 		
 		.patches = {
-			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 0, .destinationType = OUTPUT, .destinationIndex = 0},
-			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 1, .destinationType = OSCILLATOR_PULSEWIDTH, .destinationIndex = 0},
+			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 0, .destinationType = FILTER_INPUT, .destinationIndex = 0},
+			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 1, .destinationType = FILTER_CUTOFF, .destinationIndex = 0},
+			{.level = 1.0f, .sourceType = FILTER, .sourceIndex = 0, .destinationType = OUTPUT, .destinationIndex = 0},
 		},
-		.patchCount = 2,
+		.patchCount = 3,
 	};
 
 	// Open an audio device.
