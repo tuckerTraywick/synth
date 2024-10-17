@@ -33,6 +33,49 @@ static void stepOscillator(Synth *synth, Voice *voice, size_t oscillatorIndex, f
 	}
 }
 
+// Resets an envelope's inputs to its parameters.
+static void initializeEnvelope(Synth *synth, Voice *voice, size_t envelopeIndex) {
+	EnvelopeParameters *parameters = synth->envelopeParameters + envelopeIndex;
+	Envelope *envelope = voice->envelopes + envelopeIndex;
+	envelope->rate = parameters->rate;
+}
+
+// Steps an evnelope 1 tick.
+static void stepEnvelope(Synth *synth, Voice *voice, size_t envelopeIndex, float sampleRate) {
+	EnvelopeParameters *parameters = synth->envelopeParameters + envelopeIndex;
+	Envelope *envelope = voice->envelopes + envelopeIndex;
+	if (voice->held) {
+		// Attack phase.
+		if (envelope->t < parameters->attack) {
+			envelope->output += 1.0f/parameters->attack/sampleRate;
+			envelope->t += 1.0f/sampleRate;
+		// Decay phase.
+		} else if (envelope->t < parameters->attack + parameters->decay) {
+			if (parameters->decay != 0.0f) {
+				envelope->output -= (1.0f - parameters->sustain)/parameters->decay/sampleRate;
+			}
+			envelope->t += 1.0f/sampleRate;
+		// Sustain phase.
+		} else {
+			envelope->output = parameters->sustain;
+		}
+	} else if (envelope->t != 0.0f) {
+		// If the note was just released, move t to the release phase.
+		if (envelope->t < parameters->attack + parameters->decay) {
+			// envelope->output = parameters->sustain;
+			envelope->t = parameters->attack + parameters->decay;
+		// If the output hasn't reached zero, continue releasing.
+		} else if (envelope->output > 0.0f) {
+			envelope->output -= parameters->sustain/parameters->release/sampleRate;
+			envelope->t += 1.0f/sampleRate;
+		// Else, the envelope is done so reset it.
+		} else {
+			envelope->output = 0.0f;
+			envelope->t = 0.0f;
+		}
+	}
+}
+
 // Adds or multiplies the input of a patch's destination with the value of the output of a patch's
 // source, depending on the type of source.
 // TODO: Make this function route the oscillator patches first, then the envelope patches so inputs
@@ -82,6 +125,11 @@ float stepSynth(Synth *synth, float sampleRate) {
 				stepOscillator(synth, voice, componentIndex, sampleRate);
 				initializeOscillator(synth, voice, componentIndex);
 			}
+
+			if (componentIndex < synth->envelopeCount) {
+				stepEnvelope(synth, voice, componentIndex, sampleRate);
+				initializeEnvelope(synth, voice, componentIndex);
+			}
 		}
 
 		// Route the patches.
@@ -96,12 +144,17 @@ float stepSynth(Synth *synth, float sampleRate) {
 
 void startNote(Synth *synth, float frequency) {
 	Voice *voice = synth->voices + synth->nextVoice;
-	*voice = (Voice){.frequency = frequency};
+	*voice = (Voice){.frequency = frequency, .held = true};
 	// Initialize the components.
 	for (size_t componentIndex = 0; componentIndex < synthSize; ++componentIndex) {
 		initializeOscillator(synth, voice, componentIndex);
+		initializeEnvelope(synth, voice, componentIndex);
 	}
 	synth->nextVoice = (synth->nextVoice + 1)%voiceCount;
+}
+
+void endNote(Synth *synth, size_t noteIndex) {
+	synth->voices[noteIndex] = (Voice){0};
 }
 
 // float stepSynth(Synth *synth, float sampleRate) {

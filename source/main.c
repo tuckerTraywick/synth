@@ -25,13 +25,17 @@ int main(void) {
 		
 		.oscillatorParameters = {
 			{.amplitude = 1.0f, .frequencyCoarse = 1.0f},
-			{.amplitude = 1.0f, .frequencyCoarse = 0.0f, .frequencyFine = 1.0f},
 		},
-		.oscillatorCount = 2,
+		.oscillatorCount = 1,
+
+		.envelopeParameters = {
+			{.attack = 1.0f, .decay = 0.0f, .sustain = 1.0f, .release = 1.0f},
+		},
+		.envelopeCount = 1,
 		
 		.patches = {
 			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 0, .destinationType = OUTPUT, .destinationIndex = 0},
-			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 1, .destinationType = OSCILLATOR_AMPLITUDE, .destinationIndex = 0},
+			{.level = 1.0f, .sourceType = ENVELOPE, .sourceIndex = 0, .destinationType = OSCILLATOR_AMPLITUDE, .destinationIndex = 0},
 		},
 		.patchCount = 2,
 	};
@@ -59,6 +63,10 @@ int main(void) {
 	// TODO: DO SYNTH UPDATE IN GUI LOOP INSTEAD OF CALLBACK SO CONTROLS RESPOND IMMEDIATELY.
 
 	// Wait to quit.
+	printf("Press enter to stop holding the note.\n");
+	getchar();
+	synth.voices[0].held = false;
+
 	printf("Press enter to stop.\n");
 	getchar();
 

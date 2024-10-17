@@ -51,6 +51,7 @@ typedef struct Oscillator {
 // } Filter;
 
 typedef struct EnvelopeParameters {
+	float rate;
 	float attack;
 	float decay;
 	float sustain;
@@ -58,6 +59,7 @@ typedef struct EnvelopeParameters {
 } EnvelopeParameters;
 
 typedef struct Envelope {
+	float rate;
 	float output;
 	float t;
 } Envelope;
