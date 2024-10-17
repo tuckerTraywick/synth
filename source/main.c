@@ -24,9 +24,10 @@ int main(void) {
 		.modulation = 1.0f,
 		
 		.oscillatorParameters = {
-			{.amplitude = 1.0f, .frequencyCoarse = 1.0f},
+			{.type = SQUARE, .amplitude = 1.0f, .frequencyCoarse = 1.0f, .pulseWidth = 0.5f},
+			{.type = SINE, .amplitude = 0.5f, .frequencyCoarse = 0.0f, .frequencyFine = 0.1f, .pulseWidth = 0.5f},
 		},
-		.oscillatorCount = 1,
+		.oscillatorCount = 2,
 
 		.envelopeParameters = {
 			{.attack = 1.0f, .decay = 0.0f, .sustain = 1.0f, .release = 1.0f},
@@ -35,11 +36,10 @@ int main(void) {
 		
 		.patches = {
 			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 0, .destinationType = OUTPUT, .destinationIndex = 0},
-			{.level = 1.0f, .sourceType = ENVELOPE, .sourceIndex = 0, .destinationType = OSCILLATOR_AMPLITUDE, .destinationIndex = 0},
+			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 1, .destinationType = OSCILLATOR_PULSEWIDTH, .destinationIndex = 0},
 		},
 		.patchCount = 2,
 	};
-	startNote(&synth, 440.0f);
 
 	// Open an audio device.
 	SDL_AudioSpec audioSpec = {
@@ -62,11 +62,12 @@ int main(void) {
 
 	// TODO: DO SYNTH UPDATE IN GUI LOOP INSTEAD OF CALLBACK SO CONTROLS RESPOND IMMEDIATELY.
 
-	// Wait to quit.
+	size_t note = startNote(&synth, 440.0f);
 	printf("Press enter to stop holding the note.\n");
 	getchar();
-	synth.voices[0].held = false;
+	stopNote(&synth, note);
 
+	// Wait to quit.
 	printf("Press enter to stop.\n");
 	getchar();
 

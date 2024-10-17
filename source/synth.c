@@ -14,30 +14,54 @@ static void initializeOscillator(Synth *synth, Voice *voice, size_t oscillatorIn
 	oscillator->frequency = parameters->frequencyCoarse*voice->frequency + parameters->frequencyFine;
 	oscillator->offset = parameters->offset;
 	oscillator->phase = parameters->phase;
+	oscillator->pulseWidth = parameters->pulseWidth;
 }
 
 // Steps an oscillator 1 tick.
 static void stepOscillator(Synth *synth, Voice *voice, size_t oscillatorIndex, float sampleRate) {
 	OscillatorParameters *parameters = synth->oscillatorParameters + oscillatorIndex;
 	Oscillator *oscillator = voice->oscillators + oscillatorIndex;
-
-	// Update the output.
-	oscillator->output = oscillator->amplitude*sinf(oscillator->t + oscillator->phase) + oscillator->offset;
-
-	// Update the time value.
 	float period = sampleRate/oscillator->frequency;
 	float increment = 2.0f*M_PI/period;
-	oscillator->t += increment;
-	if (oscillator->t > 2.0f*M_PI) {
-		oscillator->t -= 2.0f*M_PI;
+	switch (parameters->type) {
+		case SINE:
+			oscillator->output = oscillator->amplitude*sinf(oscillator->t + oscillator->phase) + oscillator->offset;
+			oscillator->t += increment;
+			if (oscillator->t > 2.0f*M_PI) {
+				oscillator->t -= 2.0f*M_PI;
+			}
+			break;
+		case SQUARE:
+			oscillator->output = (oscillator->t < 2.0*M_PI*oscillator->pulseWidth) ? -oscillator->amplitude : oscillator->amplitude;
+			oscillator->t += increment;
+			if (oscillator->t > 2.0f*M_PI) {
+				oscillator->t = 0.0f;
+			}
+			break;
+		case TRIANGLE:
+			oscillator->output = (oscillator->t < M_PI) ? oscillator->amplitude*oscillator->t/M_PI : oscillator->amplitude*(2.0f*M_PI - oscillator->t)/M_PI;
+			oscillator->t += increment;
+			if (oscillator->t > 2.0f*M_PI) {
+				oscillator->t = 0.0f;
+			}
+			break;
+		case SAWTOOTH:
+			oscillator->output = oscillator->t/2.0/M_PI;
+			oscillator->t += increment;
+			if (oscillator->t > 2.0f*M_PI) {
+				oscillator->t = 0.0f;
+			}
+			break;
+		case REVERSE_SAWTOOTH:
+			oscillator->output = (2.0f*M_PI - oscillator->t)/2.0/M_PI;
+			oscillator->t += increment;
+			if (oscillator->t > 2.0f*M_PI) {
+				oscillator->t = 0.0f;
+			}
+			break;
+		default:
+			assert(false && "Invalid enum value.");
 	}
-}
-
-// Resets an envelope's inputs to its parameters.
-static void initializeEnvelope(Synth *synth, Voice *voice, size_t envelopeIndex) {
-	EnvelopeParameters *parameters = synth->envelopeParameters + envelopeIndex;
-	Envelope *envelope = voice->envelopes + envelopeIndex;
-	envelope->rate = parameters->rate;
 }
 
 // Steps an evnelope 1 tick.
@@ -87,7 +111,7 @@ static void routePatch(Voice *voice, Patch *patch, float modulation) {
 		case OUTPUT:
 			destination = &voice->output;
 			break;
-		case OSCILLATOR_AMPLITUDE ... OSCILLATOR_OFFSET:
+		case OSCILLATOR_AMPLITUDE ... OSCILLATOR_PULSEWIDTH:
 			// Add the right offset to point to the right field of the oscillator.
 			destination = (float*)((char*)(voice->oscillators + patch->destinationIndex) + patch->destinationType);
 			break;
@@ -128,7 +152,6 @@ float stepSynth(Synth *synth, float sampleRate) {
 
 			if (componentIndex < synth->envelopeCount) {
 				stepEnvelope(synth, voice, componentIndex, sampleRate);
-				initializeEnvelope(synth, voice, componentIndex);
 			}
 		}
 
@@ -142,19 +165,19 @@ float stepSynth(Synth *synth, float sampleRate) {
 	return synth->volume*synth->output;
 }
 
-void startNote(Synth *synth, float frequency) {
+size_t startNote(Synth *synth, float frequency) {
 	Voice *voice = synth->voices + synth->nextVoice;
 	*voice = (Voice){.frequency = frequency, .held = true};
 	// Initialize the components.
 	for (size_t componentIndex = 0; componentIndex < synthSize; ++componentIndex) {
 		initializeOscillator(synth, voice, componentIndex);
-		initializeEnvelope(synth, voice, componentIndex);
 	}
 	synth->nextVoice = (synth->nextVoice + 1)%voiceCount;
+	return voice - synth->voices;
 }
 
-void endNote(Synth *synth, size_t noteIndex) {
-	synth->voices[noteIndex] = (Voice){0};
+void stopNote(Synth *synth, size_t noteIndex) {
+	synth->voices[noteIndex].held = false;
 }
 
 // float stepSynth(Synth *synth, float sampleRate) {

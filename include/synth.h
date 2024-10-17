@@ -17,13 +17,24 @@ static const size_t voiceCount = 10;
 // The number of samples played per second.
 static const float sampleRate = 48000.0f;
 
+// The type of wave an oscillator produces.
+typedef enum WaveType {
+	SINE,
+	SQUARE,
+	TRIANGLE,
+	SAWTOOTH,
+	REVERSE_SAWTOOTH,
+} WaveType;
+
 // Produces a wave and follows an envelope.
 typedef struct OscillatorParameters {
+	WaveType type;
 	float amplitude;
 	float frequencyCoarse;
 	float frequencyFine;
 	float phase;
 	float offset;
+	float pulseWidth;
 } OscillatorParameters;
 
 typedef struct Oscillator {
@@ -31,6 +42,7 @@ typedef struct Oscillator {
 	float frequency;
 	float phase;
 	float offset;
+	float pulseWidth;
 	float output;
 	float t;
 } Oscillator;
@@ -51,7 +63,6 @@ typedef struct Oscillator {
 // } Filter;
 
 typedef struct EnvelopeParameters {
-	float rate;
 	float attack;
 	float decay;
 	float sustain;
@@ -59,7 +70,6 @@ typedef struct EnvelopeParameters {
 } EnvelopeParameters;
 
 typedef struct Envelope {
-	float rate;
 	float output;
 	float t;
 } Envelope;
@@ -75,6 +85,7 @@ typedef enum PatchDestinationType {
 	OSCILLATOR_FREQUENCY = offsetof(Oscillator, frequency),
 	OSCILLATOR_PHASE = offsetof(Oscillator, phase),
 	OSCILLATOR_OFFSET = offsetof(Oscillator, offset),
+	OSCILLATOR_PULSEWIDTH = offsetof(Oscillator, pulseWidth),
 } PatchDestinationType;
 
 typedef struct Patch {
@@ -109,8 +120,8 @@ typedef struct Synth {
 
 float stepSynth(Synth *synth, float sampleRate);
 
-void startNote(Synth *synth, float frequency);
+size_t startNote(Synth *synth, float frequency);
 
-// void stopNote(Synth *synth, size_t note);
+void stopNote(Synth *synth, size_t note);
 
 #endif // SYNTH_H
