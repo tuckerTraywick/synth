@@ -25,7 +25,7 @@ static void stepOscillator(Synth *synth, Voice *voice, size_t oscillatorIndex, f
 	oscillator->output = oscillator->amplitude*sinf(oscillator->t + oscillator->phase) + oscillator->offset;
 
 	// Update the time value.
-	float period = sampleRate/voice->frequency;
+	float period = sampleRate/oscillator->frequency;
 	float increment = 2.0f*M_PI/period;
 	oscillator->t += increment;
 	if (oscillator->t > 2.0f*M_PI) {
@@ -53,13 +53,12 @@ static void routePatch(Voice *voice, Patch *patch, float modulation) {
 	}
 
 	// Route the source to the destination.
-	// TODO: Neaten modulation ternary.
 	switch (patch->sourceType) {
 		case OSCILLATOR:
-			*destination = voice->oscillators[patch->sourceIndex].output;
+			*destination += ((patch->destinationType == OUTPUT) ? 1.0f : modulation)*patch->level*voice->oscillators[patch->sourceIndex].output;
 			break;
 		case ENVELOPE:
-			*destination *= ((patch->destinationType == OUTPUT) ? 1.0f : modulation)*patch->level*voice->envelopes[patch->sourceIndex].output;
+			*destination *= patch->level*voice->envelopes[patch->sourceIndex].output;
 			break;
 		default:
 			assert(false && "Invalid enum value.");
@@ -95,7 +94,7 @@ float stepSynth(Synth *synth, float sampleRate) {
 	return synth->volume*synth->output;
 }
 
-void beginNote(Synth *synth, float frequency) {
+void startNote(Synth *synth, float frequency) {
 	Voice *voice = synth->voices + synth->nextVoice;
 	*voice = (Voice){.frequency = frequency};
 	// Initialize the components.

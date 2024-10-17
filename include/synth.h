@@ -68,7 +68,7 @@ typedef enum PatchSourceType {
 } PatchSourceType;
 
 typedef enum PatchDestinationType {
-	OUTPUT = 100,
+	OUTPUT = -1,
 	OSCILLATOR_AMPLITUDE = offsetof(Oscillator, amplitude),
 	OSCILLATOR_FREQUENCY = offsetof(Oscillator, frequency),
 	OSCILLATOR_PHASE = offsetof(Oscillator, phase),
@@ -107,8 +107,8 @@ typedef struct Synth {
 
 float stepSynth(Synth *synth, float sampleRate);
 
-void beginNote(Synth *synth, float frequency);
+void startNote(Synth *synth, float frequency);
 
-// void endNote(Synth *synth, size_t note);
+// void stopNote(Synth *synth, size_t note);
 
 #endif // SYNTH_H

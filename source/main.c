@@ -25,15 +25,17 @@ int main(void) {
 		
 		.oscillatorParameters = {
 			{.amplitude = 1.0f, .frequencyCoarse = 1.0f},
+			{.amplitude = 1.0f, .frequencyCoarse = 0.0f, .frequencyFine = 1.0f},
 		},
-		.oscillatorCount = 1,
+		.oscillatorCount = 2,
 		
 		.patches = {
 			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 0, .destinationType = OUTPUT, .destinationIndex = 0},
+			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 1, .destinationType = OSCILLATOR_AMPLITUDE, .destinationIndex = 0},
 		},
-		.patchCount = 1,
+		.patchCount = 2,
 	};
-	beginNote(&synth, 440.0f);
+	startNote(&synth, 440.0f);
 
 	// Open an audio device.
 	SDL_AudioSpec audioSpec = {
