@@ -3,9 +3,6 @@
 #include "SDL.h"
 #include "synth.h"
 
-// The number of samples played per second.
-const float sampleRate = 48000.0f;
-
 // SDL callback to play the synth.
 static void playSound(void *userData, uint8_t *stream, int length) {
 	Synth *synth = (Synth*)userData;
@@ -23,33 +20,20 @@ int main(void) {
 	}
 
 	Synth synth = {
-		.level = 2000.0f,
+		.volume = 1000.0f,
 		.modulation = 1.0f,
-
-		.oscillatorCount = 4,
-		.envelopeCount = 1,
-
-		.voices = {{
-			.held = true,
-			.frequency = 440.0f,
-			.oscillators = {
-				{.index = 1.0f, .level = 1.0f},
-				{.index = 1.0f, .level = 1.0f},
-				{.index = 1.0f, .level = 1.0f},
-				{.index = 1.0f, .level = 1.0f},
-			},
-			.envelopes = {
-				{.level = 1.0f, .attack = 1.0f, .decay = 1.0f, .sustain = 1.0f, .release = 1.0f},
-			},
-		}},
-
-		.fmPatches = {
-			[0][oscillatorCount] = 1.0f,
+		
+		.oscillatorParameters = {
+			{.amplitude = 1.0f, .frequencyCoarse = 1.0f},
 		},
-		.envelopeFmPatches = {
-			[0][0] = 100.0f,
+		.oscillatorCount = 1,
+		
+		.patches = {
+			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 0, .destinationType = OUTPUT, .destinationIndex = 0},
 		},
+		.patchCount = 1,
 	};
+	beginNote(&synth, 440.0f);
 
 	// Open an audio device.
 	SDL_AudioSpec audioSpec = {
@@ -70,13 +54,9 @@ int main(void) {
 	// Begin playback.
 	SDL_PauseAudioDevice(playbackDevice, 0);
 
-	// DO SYNTH UPDATE IN GUI LOOP INSTEAD OF CALLBACK SO CONTROLS RESPOND IMMEDIATELY.
+	// TODO: DO SYNTH UPDATE IN GUI LOOP INSTEAD OF CALLBACK SO CONTROLS RESPOND IMMEDIATELY.
 
 	// Wait to quit.
-	printf("Press enter to stop the note.\n");
-	getchar();
-	synth.voices[0].held = false;
-
 	printf("Press enter to stop.\n");
 	getchar();
 

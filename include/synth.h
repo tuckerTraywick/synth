@@ -5,54 +5,102 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// The number of oscillators.
-static const size_t oscillatorCount = 6;
+// The number of oscillators, envlopes, and filters the synth can have.
+static const size_t synthSize = 8;
 
-// The number of enveloeps.
-static const size_t envelopeCount = 8;
+// The number of connections that can be made between components.
+static const size_t patchCount = 20;
 
 // The number of notes that can be played at once.
 static const size_t voiceCount = 10;
 
+// The number of samples played per second.
+static const float sampleRate = 48000.0f;
+
 // Produces a wave and follows an envelope.
+typedef struct OscillatorParameters {
+	float amplitude;
+	float frequencyCoarse;
+	float frequencyFine;
+	float phase;
+	float offset;
+} OscillatorParameters;
+
 typedef struct Oscillator {
-	float level;
-	float index;
-	float fm;
-	float am;
-	float frequencyOffset;
+	float amplitude;
+	float frequency;
+	float phase;
+	float offset;
 	float output;
-	float t; // [0, 2pi].
+	float t;
 } Oscillator;
 
-typedef struct Envelope {
-	float level;
+// typedef struct FilterParamters {
+// 	float leftCutoff;
+// 	float rightCutoff;
+// 	float resonance;
+// } FilterParamters;
+
+// typedef struct Filter {
+// 	float input;
+// 	float leftCutoff;
+// 	float rightCutoff;
+// 	float resonance;
+// 	float previousInput;
+// 	float output;
+// } Filter;
+
+typedef struct EnvelopeParameters {
 	float attack;
 	float decay;
 	float sustain;
 	float release;
-	float output; // [0, 1].
+} EnvelopeParameters;
+
+typedef struct Envelope {
+	float output;
 	float t;
 } Envelope;
 
+typedef enum PatchSourceType {
+	OSCILLATOR,
+	ENVELOPE,
+} PatchSourceType;
+
+typedef enum PatchDestinationType {
+	OUTPUT = 100,
+	OSCILLATOR_AMPLITUDE = offsetof(Oscillator, amplitude),
+	OSCILLATOR_FREQUENCY = offsetof(Oscillator, frequency),
+	OSCILLATOR_PHASE = offsetof(Oscillator, phase),
+	OSCILLATOR_OFFSET = offsetof(Oscillator, offset),
+} PatchDestinationType;
+
+typedef struct Patch {
+	float level;
+	PatchSourceType sourceType;
+	size_t sourceIndex;
+	PatchDestinationType destinationType;
+	size_t destinationIndex;
+} Patch;
+
 typedef struct Voice {
-	Oscillator oscillators[oscillatorCount];
-	Envelope envelopes[envelopeCount];
+	Oscillator oscillators[synthSize];
+	Envelope envelopes[synthSize];
 	bool held; // Whether the note is being held.
 	float frequency;
 	float output;
 } Voice;
 
 typedef struct Synth {
+	OscillatorParameters oscillatorParameters[synthSize];
+	size_t oscillatorCount;
+	EnvelopeParameters envelopeParameters[synthSize];
+	size_t envelopeCount;
+	Patch patches[patchCount];
+	size_t patchCount;
 	Voice voices[voiceCount];
 	size_t nextVoice;
-	size_t oscillatorCount;
-	size_t envelopeCount;
-	float fmPatches[oscillatorCount][oscillatorCount + 1];
-	float amPatches[oscillatorCount][oscillatorCount + 1];
-	float envelopeAmPatches[envelopeCount][oscillatorCount + 1];
-	float envelopeFmPatches[envelopeCount][oscillatorCount + 1];
-	float level;
+	float volume;
 	float modulation;
 	float output;
 } Synth;
@@ -61,6 +109,6 @@ float stepSynth(Synth *synth, float sampleRate);
 
 void beginNote(Synth *synth, float frequency);
 
-void endNote(Synth *synth, float frequency);
+// void endNote(Synth *synth, size_t note);
 
 #endif // SYNTH_H
