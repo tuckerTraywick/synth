@@ -1,84 +1,40 @@
 #include <math.h>
-#include <stdio.h>
-#include "SDL.h"
-#include "synth.h"
+#include "raylib.h"
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
 
-// SDL callback to play the synth.
-static void playSound(void *userData, uint8_t *stream, int length) {
-	Synth *synth = (Synth*)userData;
-	uint16_t *output = (uint16_t*)stream;
-	for (int i = 0; i < length/sizeof *output; ++i) {
-		output[i] = stepSynth(synth, sampleRate);
-	}
+// 0 <= t <= 2*pi
+float f(float t) {
+	return sin(t);
 }
 
 int main(void) {
-	// Initialization.
-	if (SDL_Init(SDL_INIT_VIDEO) < 0 || SDL_Init(SDL_INIT_AUDIO) < 0) {
-		printf("Error initializing SDL.\n");
-		return 1;
+	// Setup.
+	InitWindow(600, 600, "test");
+	SetTargetFPS(60);
+	GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+	GuiSetStyle(DEFAULT, BACKGROUND_COLOR, 0);
+
+	// Main loop.
+	while (!WindowShouldClose()) {
+		int width = GetScreenWidth();
+		int height = GetScreenHeight();
+		BeginDrawing();
+			ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+			DrawLine(0, height/2, width, height/2, WHITE);
+			DrawLine(width/2, height/2 - 10, width/2, height/2 + 10, WHITE);
+			DrawText("0", 0, height/2 + 5, 20, (Color){255, 0, 0, 255});
+			DrawText("pi", width/2 - 10, height/2 + 5, 20, (Color){255, 0, 0, 255});
+			DrawText("2pi", width - 30, height/2 + 5, 20, (Color){255, 0, 0, 255});
+			for (int x = 0; x < width; ++x) {
+				float t = (float)x/(float)width*2*PI;
+				int y = 100*f(t);
+				DrawPixel(x, height/2 - y, RAYWHITE);
+			}
+		EndDrawing();
 	}
 
-	Synth synth = {
-		.volume = 1000.0f,
-		.modulation = 1.0f,
-		
-		.oscillatorParameters = {
-			{.type = SQUARE, .amplitude = 1.0f, .frequencyCoarse = 1.0f, .pulseWidth = 0.5f},
-			{.type = TRIANGLE, .amplitude = 0.9f, .frequencyCoarse = 0.0f, .frequencyFine = 0.5f, .offset = 0.1f, .pulseWidth = 0.5f},
-		},
-		.oscillatorCount = 2,
-
-		.envelopeParameters = {
-			{.attack = 1.0f, .decay = 0.0f, .sustain = 1.0f, .release = 1.0f},
-		},
-		.envelopeCount = 1,
-
-		.filterParameters = {
-			{.cutoff = 0.0f},
-		},
-		.filterCount = 1,
-		
-		.patches = {
-			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 0, .destinationType = FILTER_INPUT, .destinationIndex = 0},
-			{.level = 1.0f, .sourceType = OSCILLATOR, .sourceIndex = 1, .destinationType = FILTER_CUTOFF, .destinationIndex = 0},
-			{.level = 1.0f, .sourceType = FILTER, .sourceIndex = 0, .destinationType = OUTPUT, .destinationIndex = 0},
-		},
-		.patchCount = 3,
-	};
-
-	// Open an audio device.
-	SDL_AudioSpec audioSpec = {
-		.freq = sampleRate,
-		.format = AUDIO_S16,
-		.channels = 1,
-		.samples = 2048,
-		.callback = &playSound,
-        .userdata = &synth,
-	};
-	SDL_AudioDeviceID playbackDevice = SDL_OpenAudioDevice(NULL, 0, &audioSpec, &audioSpec, 0);
-	if (playbackDevice == 0) {
-		printf("Error opening playback device.\n");
-		SDL_Quit();
-		return 1;
-	}
-
-	// Begin playback.
-	SDL_PauseAudioDevice(playbackDevice, 0);
-
-	// TODO: DO SYNTH UPDATE IN GUI LOOP INSTEAD OF CALLBACK SO CONTROLS RESPOND IMMEDIATELY.
-
-	size_t note = startNote(&synth, 440.0f);
-	printf("Press enter to stop holding the note.\n");
-	getchar();
-	stopNote(&synth, note);
-
-	// Wait to quit.
-	printf("Press enter to stop.\n");
-	getchar();
-
-	// Cleanup.
-	SDL_CloseAudioDevice(playbackDevice);
-	SDL_Quit();
+	// Teardown.
+	CloseWindow();
 	return 0;
 }

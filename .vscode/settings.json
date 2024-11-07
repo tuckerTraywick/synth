@@ -8,6 +8,14 @@
 		"stdint.h": "c",
 		"stdio.h": "c",
 		"_stdio.h": "c",
-		"gui.h": "c"
-	}
+		"gui.h": "c",
+		"raygui.h": "c"
+	},
+	"makefile.launchConfigurations": [
+		{
+			"cwd": "/Users/tuckertraywick/local/code/synth/binary",
+			"binaryPath": "/Users/tuckertraywick/local/code/synth/binary/run",
+			"binaryArgs": []
+		}
+	]
 }

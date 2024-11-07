@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -O -g3 -std=c99 -Wall -Wextra -Wpedantic
-INCLUDE := -Iinclude `sdl2-config --cflags` `pkg-config sdl2_ttf --cflags`
-LIBRARIES := -lm `sdl2-config --libs` `pkg-config sdl2_ttf --libs`
+INCLUDE := -Iinclude `pkg-config raylib --cflags`
+LIBRARIES := -lm  `pkg-config raylib --libs`
 
 SOURCE_FILES := $(shell find source -name '*.c')
 OBJECT_FILES := $(SOURCE_FILES:source/%.c=build/%.o)
