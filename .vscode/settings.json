@@ -9,7 +9,8 @@
 		"stdio.h": "c",
 		"_stdio.h": "c",
 		"gui.h": "c",
-		"raygui.h": "c"
+		"raygui.h": "c",
+		"raylib.h": "c"
 	},
 	"makefile.launchConfigurations": [
 		{
